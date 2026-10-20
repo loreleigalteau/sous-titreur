@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+
+# Frontend
+node_modules/
+backend/app/static/
+
+# Local user data (projects, media, generated subtitles)
+projects/
+*.srt
+*.vtt
+*.ass
+*.mp4
+*.mov
+*.mkv
+*.wav
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

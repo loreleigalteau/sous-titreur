@@ -1,0 +1,175 @@
+/**
+ * English texts. This file is the reference: other languages must have the
+ * same keys (checked by TypeScript) and the same {placeholders} (checked by a test).
+ * Keys ending in _one / _other are plural forms, used through `tn()`.
+ */
+export const en = {
+  app_title: "Sous-titreur",
+  language_label: "Interface language",
+  loading: "Loading…",
+  cancel: "Cancel",
+  error_generic: "Something went wrong: {details}",
+  server_unreachable: "Cannot reach the application. Is it still running?",
+
+  // Home
+  import_title: "Import a video",
+  import_hint: "Drag and drop a video here, or choose a file. It stays on your computer.",
+  import_button: "Choose a video",
+  uploading: "Importing the video… {percent}%",
+  projects_title: "Your projects",
+  projects_empty: "No project yet. Import a video to get started.",
+  project_segments_one: "{count} subtitle",
+  project_segments_other: "{count} subtitles",
+  project_not_transcribed: "Not transcribed yet",
+  delete: "Delete",
+  confirm_delete: "Delete the project “{name}” and its copy of the video? This cannot be undone.",
+
+  // Project
+  back_to_projects: "← Projects",
+  project_not_found: "This project no longer exists.",
+  save_saved: "All changes saved",
+  save_saving: "Saving…",
+  save_unsaved: "Unsaved changes",
+  save_error: "Saving failed. Retry",
+  video_unsupported:
+    "Your browser cannot play this video format. Transcription and export still work; to preview it, convert the video to MP4.",
+
+  // Transcription
+  transcribe_title: "Transcription",
+  transcribe_again: "Transcribe again",
+  transcribe_again_warning: "This replaces the current subtitles, including your corrections.",
+  confirm_transcribe_again: "Replace the current subtitles with a new transcription?",
+  model_label: "Accuracy",
+  model_tiny: "Tiny: fastest, least accurate",
+  model_base: "Base: fast",
+  model_small: "Small: good balance (recommended)",
+  model_medium: "Medium: most accurate, slow",
+  model_hint: "The model is downloaded on first use (75 MB to 1.5 GB).",
+  spoken_language_label: "Language spoken in the video",
+  spoken_language_auto: "Detect automatically",
+  start_transcription: "Start transcription",
+  status_extracting: "Extracting the audio…",
+  status_downloading_model: "Downloading the model (first use only, this may take several minutes)…",
+  status_loading_model: "Loading the model…",
+  status_transcribing: "Transcribing… {percent}%",
+  status_done: "Transcription complete.",
+  transcription_running_notice: "Editing is paused during the transcription.",
+
+  // Undo / redo, export
+  undo: "Undo (Ctrl/⌘+Z)",
+  redo: "Redo (Ctrl/⌘+Shift+Z)",
+  export_menu: "Export",
+  export_mp4: "Video with subtitles (MP4)",
+  export_srt: "Subtitles only (SRT)",
+  export_vtt: "Subtitles only (VTT)",
+  export_ass: "Subtitles with style (ASS)",
+  export_ass_hint: "For VLC, Aegisub or video editors. The fonts must be installed on the computer that reads it.",
+  render_title: "Video export",
+  render_preparing: "Preparing the subtitles… {current} / {total}",
+  render_encoding: "Creating the video… {percent}%",
+  render_done: "Your video is ready.",
+  render_download: "Download the video",
+  render_keep_open: "Keep this page open until the export is finished.",
+  close: "Close",
+  job_busy: "Another task (transcription or export) is already running. Please wait for it to finish.",
+
+  // Player
+  play: "Play",
+  pause: "Pause",
+  seek: "Position in the video",
+  drag_hint: "Drag the subtitle on the video to move it.",
+  style_sample: "Your subtitle here",
+
+  // Style
+  style_title: "Style",
+  style_font: "Font",
+  style_bold: "Bold",
+  style_size: "Size",
+  style_text_color: "Text colour",
+  style_outline: "Outline",
+  style_outline_color: "Outline colour",
+  style_outline_width: "Outline thickness",
+  style_background: "Background box",
+  style_background_color: "Box colour",
+  style_background_opacity: "Box opacity",
+  style_max_width: "Line width",
+  style_position: "Position",
+  position_top: "Top",
+  position_middle: "Middle",
+  position_bottom: "Bottom",
+  style_reset: "Reset the style",
+
+  // Subtitle length
+  length_label: "Subtitle length",
+  length_short: "Short: a few words (TikTok, Reels)",
+  length_medium: "Medium: one line",
+  length_long: "Standard: up to two lines (YouTube)",
+  length_none: "Whole sentences",
+  recut: "Re-cut",
+  recut_hint: "Cut all the subtitles again to this length. Can be undone.",
+
+  // Subtitle actions
+  segment_split: "Split at the cursor (Ctrl/⌘+Enter)",
+  split_hint: "Click in the text where you want to cut, then split.",
+  segment_add_after: "Add a subtitle after this one",
+  segment_merge: "Merge with the next one",
+  segment_delete: "Delete this subtitle",
+  add_subtitle_here: "Add a subtitle at the current time",
+
+  // Timeline
+  timeline_label: "Timeline",
+  timeline_zoom: "Zoom",
+  waveform_loading: "Loading the sound wave…",
+
+  // Shift timings
+  shift_title: "Shift timings",
+  shift_amount: "Seconds (negative: earlier, positive: later)",
+  shift_from_current: "Only from the current subtitle onward",
+  shift_apply: "Shift",
+
+  // Keyboard shortcuts
+  shortcuts_button: "Keyboard shortcuts (?)",
+  shortcuts_title: "Keyboard shortcuts",
+  shortcuts_note: "Outside the text fields, except for the shortcuts with Ctrl/⌘.",
+  key_space: "Space",
+  key_enter: "Enter",
+  key_escape: "Esc",
+  key_shift: "Shift",
+  shortcut_play: "Play / pause",
+  shortcut_seek: "Back / forward 1 second (with Shift: 5 seconds)",
+  shortcut_navigate: "Previous / next subtitle",
+  shortcut_edit: "Edit the current subtitle's text",
+  shortcut_leave: "Leave the text field",
+  shortcut_split: "Split the subtitle at the cursor",
+  shortcut_mark: "Set the current subtitle's start / end to the playhead",
+  shortcut_undo: "Undo / redo",
+  shortcut_save: "Save now",
+  shortcut_help: "Show this list",
+
+  // Subtitles
+  segments_title: "Subtitles",
+  segments_empty: "No subtitles yet. Start a transcription to generate them.",
+  segment_start: "Start",
+  segment_end: "End",
+  segment_text: "Subtitle text",
+  invalid_time: "Invalid time. Use a format like 1:02.500.",
+  end_before_start: "The end is before the start.",
+
+  // Find and replace
+  find_placeholder: "Find",
+  replace_placeholder: "Replace with",
+  match_case: "Match case",
+  whole_word: "Whole word",
+  find_previous: "Previous",
+  find_next: "Next",
+  replace_one: "Replace",
+  replace_all: "Replace all",
+  find_count: "{current} of {total}",
+  find_none: "No results",
+  confirm_replace_all_one: "Replace {count} occurrence? Undo is not available yet.",
+  confirm_replace_all_other: "Replace {count} occurrences? Undo is not available yet.",
+  replaced_count_one: "{count} occurrence replaced.",
+  replaced_count_other: "{count} occurrences replaced.",
+};
+
+export type MessageKey = keyof typeof en;
