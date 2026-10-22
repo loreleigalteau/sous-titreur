@@ -1,0 +1,79 @@
+# Builds the standalone application on GitHub's machines, for each system,
+# when a version tag is pushed (e.g. `git tag v0.1.0 && git push origin v0.1.0`),
+# then prepares a draft Release with the files to download. Review the draft
+# on GitHub (Releases) and publish it.
+#
+# It can also be started by hand (Actions tab → "Build the application" →
+# Run workflow): the files are then only kept as downloadable artifacts.
+
+name: Build the application
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false  # one system failing does not cancel the others
+      matrix:
+        include:
+          - os: macos-14  # Macs with Apple silicon (M1, M2…)
+          - os: macos-15-intel  # Macs with an Intel processor
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # The Whisper model (about 485 MB) is downloaded once, then reused.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-small-v1
+
+      - name: Install the backend and the packaging tools
+        run: python -m pip install -e "backend[build]"
+
+      - name: Run the tests
+        run: |
+          python -m pip install -e "backend[dev]"
+          python -m pytest backend -q
+
+      - name: Build the application
+        run: python packaging/build.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sous-titreur-${{ matrix.os }}
+          path: |
+            packaging/dist/*.dmg
+            packaging/dist/*.zip
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # to create the Release
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: artifacts/*
