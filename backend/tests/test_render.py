@@ -1,4 +1,3 @@
-import shutil
 import struct
 import subprocess
 import zlib
@@ -6,9 +5,11 @@ from pathlib import Path
 
 import pytest
 
+from app.ffmpeg import ffmpeg_path
 from app.render import BLANK, Overlay, audio_options, build_concat, probe, render_video
 
-needs_ffmpeg = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="FFmpeg not installed")
+# The same FFmpeg as the application (installed with imageio-ffmpeg).
+FFMPEG = ffmpeg_path()
 
 
 def write_png(path: Path, width: int, height: int, rgba: tuple[int, int, int, int]) -> None:
@@ -46,11 +47,10 @@ def test_build_concat_overlapping_subtitles_wait_their_turn():
     assert "file '2.png'\nduration 1.000" in concat
 
 
-@needs_ffmpeg
 def test_render_burns_overlay_at_the_right_time(tmp_path: Path):
     video = tmp_path / "in.mp4"
     subprocess.run(
-        ["ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=blue:s=64x48:r=25:d=2",
+        [FFMPEG, "-loglevel", "error", "-f", "lavfi", "-i", "color=c=blue:s=64x48:r=25:d=2",
          "-pix_fmt", "yuv420p", str(video)],
         check=True,
     )
@@ -68,7 +68,7 @@ def test_render_burns_overlay_at_the_right_time(tmp_path: Path):
 
     def color_at(seconds: float) -> tuple[int, int, int]:
         raw = subprocess.run(
-            ["ffmpeg", "-loglevel", "error", "-ss", str(seconds), "-i", str(output),
+            [FFMPEG, "-loglevel", "error", "-ss", str(seconds), "-i", str(output),
              "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
             check=True, capture_output=True,
         ).stdout
@@ -92,7 +92,7 @@ def test_audio_options():
 
 def make_video_with_sound(path: Path, audio_codec: str) -> Path:
     subprocess.run(
-        ["ffmpeg", "-loglevel", "error",
+        [FFMPEG, "-loglevel", "error",
          "-f", "lavfi", "-i", "color=c=blue:s=64x48:r=25:d=1",
          "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
          "-pix_fmt", "yuv420p", "-c:a", audio_codec, "-shortest", str(path)],
@@ -104,7 +104,7 @@ def make_video_with_sound(path: Path, audio_codec: str) -> Path:
 def audio_fingerprint(video: Path) -> str:
     """MD5 of the compressed sound data, unchanged only if the sound was copied."""
     return subprocess.run(
-        ["ffmpeg", "-loglevel", "error", "-i", str(video), "-map", "0:a", "-c", "copy", "-f", "md5", "-"],
+        [FFMPEG, "-loglevel", "error", "-i", str(video), "-map", "0:a", "-c", "copy", "-f", "md5", "-"],
         check=True, capture_output=True, text=True,
     ).stdout.strip()
 
@@ -118,7 +118,6 @@ def render_with_blank(video: Path, tmp_path: Path) -> Path:
     return output
 
 
-@needs_ffmpeg
 def test_aac_sound_is_copied_without_any_change(tmp_path: Path):
     video = make_video_with_sound(tmp_path / "in.mp4", "aac")
     assert probe(video).audio_codec == "aac"
@@ -126,8 +125,26 @@ def test_aac_sound_is_copied_without_any_change(tmp_path: Path):
     assert audio_fingerprint(output) == audio_fingerprint(video)
 
 
-@needs_ffmpeg
 def test_other_sound_formats_are_converted_to_aac(tmp_path: Path):
     video = make_video_with_sound(tmp_path / "in.mkv", "pcm_s16le")
     assert probe(video).audio_codec == "pcm_s16le"
     assert probe(render_with_blank(video, tmp_path)).audio_codec == "aac"
+
+
+def test_probe_reports_the_displayed_size_of_rotated_phone_videos(tmp_path: Path):
+    """Phones store portrait videos as landscape plus a "rotate 90°" flag."""
+    landscape = tmp_path / "landscape.mp4"
+    subprocess.run(
+        [FFMPEG, "-loglevel", "error", "-f", "lavfi", "-i", "color=c=blue:s=64x48:r=25:d=1",
+         "-pix_fmt", "yuv420p", str(landscape)],
+        check=True,
+    )
+    rotated = tmp_path / "rotated.mp4"
+    subprocess.run(
+        [FFMPEG, "-loglevel", "error", "-display_rotation", "90", "-i", str(landscape), "-c", "copy", str(rotated)],
+        check=True,
+    )
+    assert (probe(landscape).width, probe(landscape).height) == (64, 48)
+    assert (probe(rotated).width, probe(rotated).height) == (48, 64)
+    assert probe(rotated).duration == pytest.approx(1.0, abs=0.05)
+    assert probe(rotated).audio_codec is None

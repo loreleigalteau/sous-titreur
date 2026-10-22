@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 
-from app.render import find_tool
+from app.ffmpeg import ffmpeg_path
 
 PEAKS_PER_SECOND = 100
 SAMPLE_RATE = 8000  # plenty to see where speech starts and stops
@@ -26,7 +26,7 @@ def compute_peaks(video: Path) -> list[float]:
     """Loudest value of each 1/PEAKS_PER_SECOND of a second, between 0 and 1."""
     process = subprocess.Popen(
         [
-            find_tool("ffmpeg"), "-nostdin", "-hide_banner", "-loglevel", "error",
+            ffmpeg_path(), "-nostdin", "-hide_banner", "-loglevel", "error",
             "-i", str(video), "-vn", "-ac", "1", "-ar", str(SAMPLE_RATE),
             "-f", "s16le", "-",  # raw 16-bit samples on the standard output
         ],

@@ -10,12 +10,11 @@ Usage:
 What it does, each step being skipped when already done:
   1. find a supported Python (3.10 to 3.13), even if the one running this
      script is not;
-  2. check that FFmpeg is installed (it is never installed for you: that needs
-     admin rights or a package manager, and you stay in control);
-  3. create backend/.venv;
-  4. install the backend and its dependencies in it;
-  5. check Node.js, then install and build the web interface (frontend/);
-  6. download the Whisper speech-recognition model(s), so that the first
+  2. create backend/.venv;
+  3. install the backend and its dependencies in it (FFmpeg included, through
+     the imageio-ffmpeg package: nothing to install separately);
+  4. check Node.js, then install and build the web interface (frontend/);
+  5. download the Whisper speech-recognition model(s), so that the first
      transcription does not have to wait for it (models already on the
      computer are detected without contacting the internet).
 
@@ -59,13 +58,6 @@ NODE_INSTALL_HINT = (
     "interface: install the LTS version from https://nodejs.org "
     "(macOS: `brew install node`), then run this script again."
 )
-
-FFMPEG_INSTALL_HINT = (
-    "FFmpeg was not found. Install it, then run this script again "
-    "(macOS: `brew install ffmpeg`, Ubuntu/Debian: `sudo apt install ffmpeg`, "
-    "Windows: https://ffmpeg.org/download.html)."
-)
-
 
 class BootstrapError(Exception):
     pass
@@ -244,15 +236,8 @@ def main(argv: list[str] | None = None) -> int:
         python, version = find_python()
         ok(f"Python {format_version(version)} ({python[0]})")
 
-        # A missing FFmpeg does not stop the setup: everything else can still
-        # be prepared, and we remind the user at the end.
-        step("Checking FFmpeg")
-        ffmpeg = shutil.which("ffmpeg")
-        if ffmpeg:
-            ok(f"FFmpeg found ({ffmpeg})")
-        else:
-            warn(FFMPEG_INSTALL_HINT)
-
+        # A missing Node.js does not stop the setup: everything else can
+        # still be prepared, and we remind the user at the end.
         step("Checking Node.js")
         npm = find_npm()
         if npm:
@@ -273,16 +258,15 @@ def main(argv: list[str] | None = None) -> int:
         print("\nInterrupted.", file=sys.stderr)
         return 130
 
-    missing = [name for name, found in (("FFmpeg", ffmpeg), ("Node.js", npm)) if not found]
-    if missing:
-        print(f"\nAlmost ready: you still need to install {' and '.join(missing)} (see above).")
+    if not npm:
+        print("\nAlmost ready: you still need to install Node.js (see above).")
         return 1
     activate = r".venv\Scripts\activate" if IS_WINDOWS else "source .venv/bin/activate"
     print(
         "\nAll set. To start the subtitle editor:\n"
         "  cd backend\n"
         f"  {activate}\n"
-        "  python -m app"
+        "  python -m app            (or: python -m app --browser)"
     )
     return 0
 

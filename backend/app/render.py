@@ -11,14 +11,15 @@ each image and how long it stays on screen, with a blank image in the gaps.
 
 from __future__ import annotations
 
-import json
-import shutil
 import subprocess
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+import av
+
+from app.ffmpeg import ffmpeg_path
 from app.i18n import TranslatableError
 
 BLANK = "blank.png"
@@ -52,41 +53,30 @@ class VideoInfo:
     audio_codec: str | None = None  # None: the video has no sound
 
 
-def find_tool(name: str) -> str:
-    path = shutil.which(name)
-    if path is None:
-        raise RenderError("ffmpeg_not_found")
-    return path
-
-
 def probe(video: Path) -> VideoInfo:
-    """Displayed size, duration and sound format of a video, read with ffprobe."""
-    result = subprocess.run(
-        [
-            find_tool("ffprobe"), "-v", "error",
-            "-show_entries",
-            "stream=codec_type,codec_name,width,height:stream_side_data=rotation:format=duration",
-            "-of", "json", str(video),
-        ],
-        capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        raise RenderError("render_failed", details=result.stderr.strip())
-    data = json.loads(result.stdout)
-    streams = data.get("streams", [])
-    stream = next(s for s in streams if s.get("codec_type") == "video")
-    audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
-    width, height = int(stream["width"]), int(stream["height"])
+    """Displayed size, duration and sound format of a video.
+
+    Read with PyAV (FFmpeg's libraries for Python, installed with
+    faster-whisper), so the separate "ffprobe" program is not needed.
+    """
+    try:
+        with av.open(str(video)) as container:
+            stream = container.streams.video[0]
+            # The rotation is only known from a decoded picture.
+            frame = next(container.decode(stream))
+            if container.duration:
+                duration = container.duration / av.time_base
+            else:
+                duration = float(stream.duration * stream.time_base)
+            audio = container.streams.audio[0].codec_context.name if container.streams.audio else None
+    except (av.error.FFmpegError, IndexError, StopIteration, TypeError) as error:
+        raise RenderError("render_failed", details=str(error)) from None
+    width, height = frame.width, frame.height
     # Phones often store portrait videos as landscape plus a "rotate 90°"
     # flag; FFmpeg and browsers show them rotated, so we do the same.
-    rotation = next(
-        (int(s["rotation"]) for s in stream.get("side_data_list", []) if "rotation" in s), 0
-    )
-    if abs(rotation) % 180 == 90:
+    if abs(frame.rotation) % 180 == 90:
         width, height = height, width
-    return VideoInfo(
-        width, height, float(data["format"]["duration"]), audio["codec_name"] if audio else None
-    )
+    return VideoInfo(width, height, duration, audio)
 
 
 def build_concat(overlays: list[Overlay], duration: float) -> str:
@@ -149,7 +139,10 @@ def render_video(
     on_progress: Callable[[float], None] | None = None,
 ) -> None:
     """Write `output`, the video with the overlays burned in."""
-    ffmpeg = find_tool("ffmpeg")
+    try:
+        ffmpeg = ffmpeg_path()
+    except TranslatableError as error:
+        raise RenderError(error.key) from None
     info = probe(video)
     concat = frames_dir / "overlays.ffconcat"
     concat.write_text(build_concat(overlays, info.duration), encoding="utf-8")

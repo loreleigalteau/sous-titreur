@@ -7,13 +7,13 @@ the file, so even very large videos are never fully loaded into memory.
 
 from __future__ import annotations
 
-import shutil
 import subprocess
 import wave
 from pathlib import Path
 
 import numpy as np
 
+from app.ffmpeg import ffmpeg_path
 from app.i18n import TranslatableError
 
 # Whisper models expect 16 kHz mono audio.
@@ -26,10 +26,10 @@ class AudioExtractionError(TranslatableError):
 
 def find_ffmpeg() -> str:
     """Return the path of the ffmpeg executable, or raise a friendly error."""
-    path = shutil.which("ffmpeg")
-    if path is None:
-        raise AudioExtractionError("ffmpeg_not_found")
-    return path
+    try:
+        return ffmpeg_path()
+    except TranslatableError as error:
+        raise AudioExtractionError(error.key) from None
 
 
 def build_extract_command(ffmpeg: str, video: Path, output: Path) -> list[str]:

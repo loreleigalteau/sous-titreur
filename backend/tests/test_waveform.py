@@ -1,17 +1,18 @@
-import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
+from app.ffmpeg import ffmpeg_path
 from app.waveform import PEAKS_PER_SECOND, compute_peaks, load_peaks
 
-pytestmark = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="FFmpeg not installed")
+# The same FFmpeg as the application (installed with imageio-ffmpeg).
+FFMPEG = ffmpeg_path()
 
 
 def make_video(path: Path, with_sound: bool = True) -> Path:
     """2 s of video: silence for 1 s, then a tone for 1 s."""
-    command = ["ffmpeg", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=32x32:r=10:d=2"]
+    command = [FFMPEG, "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=32x32:r=10:d=2"]
     if with_sound:
         command += [
             "-f", "lavfi", "-i",

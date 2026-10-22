@@ -11,6 +11,9 @@ requires-python = ">=3.10"
 dependencies = [
     "faster-whisper>=1.0",
     "numpy",
+    "av>=13",  # reads video information (PyAV, installed with faster-whisper)
+    "imageio-ffmpeg>=0.5",  # a self-contained FFmpeg for each system
+    "pywebview>=5",  # the application window
     "fastapi>=0.115",
     "uvicorn>=0.30",
 ]
@@ -19,6 +22,10 @@ dependencies = [
 dev = [
     "pytest>=8",
     "httpx",  # used by FastAPI's TestClient
+]
+
+build = [
+    "pyinstaller>=6",  # packaging as a standalone application (packaging/)
 ]
 
 [project.scripts]
