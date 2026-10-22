@@ -10,6 +10,8 @@ the application (and the tests) can be used without loading it.
 
 from __future__ import annotations
 
+import os
+import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -23,8 +25,27 @@ ProgressCallback = Callable[[float], None]
 StatusCallback = Callable[[str, str], None]
 
 
+def bundled_model_dir(model_size: str) -> Path | None:
+    """Folder of a model shipped inside the application, if there is one.
+
+    The packaged application (see packaging/) carries the "small" model in a
+    "models" folder, so it works right away and offline. The
+    SOUS_TITREUR_MODELS_DIR environment variable can point to another folder
+    laid out the same way (models/<size>/model.bin…).
+    """
+    base = os.environ.get("SOUS_TITREUR_MODELS_DIR")
+    if base is None and getattr(sys, "frozen", False):
+        base = os.path.join(sys._MEIPASS, "models")  # set by PyInstaller
+    if base is None:
+        return None
+    folder = Path(base) / model_size
+    return folder if (folder / "model.bin").is_file() else None
+
+
 def is_model_cached(model_size: str) -> bool:
-    """Tell whether the model has already been downloaded."""
+    """Tell whether the model is on this computer (shipped or downloaded)."""
+    if bundled_model_dir(model_size):
+        return True
     from faster_whisper.utils import download_model
 
     try:
@@ -51,7 +72,13 @@ def load_model(model_size: str, on_status: StatusCallback | None = None):
     cached = is_model_cached(model_size)
     if on_status is not None:
         on_status("loading" if cached else "downloading", model_size)
-    return WhisperModel(model_size, device="auto", compute_type="auto", local_files_only=cached)
+    bundled = bundled_model_dir(model_size)
+    return WhisperModel(
+        str(bundled) if bundled else model_size,
+        device="auto",
+        compute_type="auto",
+        local_files_only=cached,
+    )
 
 
 def transcribe(
