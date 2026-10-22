@@ -6,8 +6,10 @@ vidéo et permet de les éditer, dans l'esprit de l'outil de sous-titres de Canv
 
 Principes non négociables :
 - **Local d'abord** : tout tourne sur l'ordinateur de l'utilisateur. Un serveur
-  Python local sert l'API et l'interface, qui s'ouvre dans le navigateur
-  (http://localhost:8000). Aucun service cloud, aucune vidéo envoyée sur internet.
+  Python local sert l'API et l'interface, affichée dans une fenêtre
+  d'application (pywebview, moteur web du système), ou dans le navigateur avec
+  `--browser`. Aucun service cloud, aucune vidéo envoyée sur internet ; une fois
+  le modèle présent, aucun accès à internet. Décision du 2026-10-22.
 - **Logiciel libre** : licence GPL v3. Uniquement des dépendances compatibles.
 - **Simple à utiliser** : un utilisateur non technique doit s'en sortir.
 
@@ -40,8 +42,9 @@ Les projets sont sauvegardés en JSON dans un dossier local.
   progression (polling ou Server-Sent Events). L'interface ne doit jamais bloquer.
 - Les fichiers vidéo peuvent être gros : pas de chargement complet en mémoire.
 - Le modèle Whisper est téléchargé au premier usage ; afficher clairement cette étape.
+  L'application distribuée embarque le modèle « small ».
 - Fonctionnement sur CPU obligatoire, GPU utilisé s'il est disponible.
-- Au lancement, ouvrir automatiquement le navigateur sur la bonne adresse.
+- Au lancement, ouvrir la fenêtre de l'application (ou le navigateur avec `--browser`).
 
 ## Plan par phases
 Travaille une phase à la fois. À la fin de chaque phase : résume ce qui a été
@@ -95,9 +98,14 @@ Critère : je transcris, corrige et exporte une vidéo depuis le navigateur.
 - Option d'affichage d'un nombre limité de mots à la fois (format vidéo courte).
 
 ### Phase 6 — Distribution
-- Paquet installable via pip.
-- Image Docker incluant FFmpeg.
-- Étude d'un exécutable autonome (PyInstaller) pour Windows, macOS, Linux.
+Public : tous les utilisateurs, sur macOS et Windows (décision du 2026-10-22).
+- Fenêtre d'application (pywebview) au lieu d'un onglet de navigateur ;
+  exports via une fenêtre native « Enregistrer sous ».
+- Application autonome (PyInstaller) pour macOS et Windows, contenant Python,
+  FFmpeg et le modèle « small » : fonctionne sans rien installer, hors ligne.
+- Construction automatique par GitHub Actions et publication dans les
+  Releases du dépôt GitHub.
+- Plus tard si besoin : paquet pip, image Docker.
 
 ## Conventions
 - Code et commentaires lisibles, rédigés en anglais. Les outils de

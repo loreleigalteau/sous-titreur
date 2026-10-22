@@ -4,24 +4,43 @@ A free (GPL v3), local-first tool that automatically generates subtitles for a
 video and lets you edit them. Everything runs on your own computer: no cloud
 service, no video ever leaves your machine.
 
-> Status: **phase 3**: a web editor that runs locally: import a video
-> (vertical TikTok/Reels format included), transcribe it into short or long
-> subtitles, correct them, adjust their timing on a timeline with the sound
-> wave, style them, and export a video with the subtitles burned in, or the
-> subtitle file alone (SRT, VTT, ASS).
+> Status: **phase 6** (in progress): a desktop application for macOS and
+> Windows. Import a video (vertical TikTok/Reels format included), transcribe
+> it into short or long subtitles, correct them, adjust their timing on a
+> timeline with the sound wave, style them, and export a video with the
+> subtitles burned in, or the subtitle file alone (SRT, VTT, ASS).
 
-## Requirements
+## Download
+
+Ready-to-use applications are on the [Releases](../../releases) page of this
+repository. They contain everything (the speech-recognition model included):
+nothing else to install, and they work without internet.
+
+- **macOS**: download the `.dmg` for your Mac (`arm64` for Apple silicon M1, M2…,
+  `x64` for Intel), open it and drag *Sous-titreur* onto *Applications*.
+- **Windows**: download the `windows-x64.zip`, unzip it, and open
+  `Sous-titreur.exe` in the `Sous-titreur` folder.
+
+**First launch.** The application is not signed with a paid Apple or Microsoft
+developer certificate, so the system warns that it cannot verify it:
+
+- **macOS**: if it says that Sous-titreur "cannot be opened" or that Apple
+  "cannot check it for malicious software", close the message, open
+  **System Settings → Privacy & Security**, scroll down and click
+  **Open Anyway** next to Sous-titreur, then confirm. This is needed only once.
+- **Windows**: in the blue "Windows protected your PC" window, click
+  **More info**, then **Run anyway**.
+
+## Requirements (to run from the source code)
 
 - **Python 3.10 to 3.13** (faster-whisper does not always have packages for the
   latest Python release yet).
-- **FFmpeg**, installed and available on the command line:
-  - macOS: `brew install ffmpeg`
-  - Ubuntu / Debian: `sudo apt install ffmpeg`
-  - Windows: download it from https://ffmpeg.org/download.html and add it to the `PATH`.
 - **Node.js 20.19 or newer**, only to build the web interface
   (https://nodejs.org, or `brew install node` on macOS).
 
-An NVIDIA GPU is used automatically if available; otherwise everything runs on the CPU.
+FFmpeg does not need to be installed: it comes with the Python dependencies
+(the imageio-ffmpeg package). An NVIDIA GPU is used automatically if
+available; otherwise everything runs on the CPU.
 
 ## Installation
 
@@ -32,7 +51,7 @@ python3 bootstrap.py
 ```
 
 It finds a compatible Python (even if your default one is too recent), checks
-that FFmpeg and Node.js are installed, creates `backend/.venv`, installs the
+that Node.js is installed, creates `backend/.venv`, installs the
 dependencies, builds the web interface and downloads the speech-recognition
 model, so that the first transcription does not have to wait for it. Running
 it again is safe: steps already done are skipped.
@@ -69,15 +88,19 @@ From the `backend/` folder, with the virtual environment activated:
 python -m app                    # or: sous-titreur
 ```
 
-This starts a local server and opens the editor in your browser
-(http://localhost:8000, or the next free port). Keep the terminal open while
-you use it; press Ctrl+C to stop.
+This opens the editor in an application window. Behind it, a local server
+runs on this computer only (port 8000, or the next free one); closing the
+window stops everything.
 
 | Option         | Description                                              |
 |----------------|----------------------------------------------------------|
+| `--browser`    | Open the editor in your web browser instead (keep the terminal open; Ctrl+C to stop). |
+| `--no-browser` | Start the server only, without window or browser (development). |
 | `--port`       | Preferred port (default 8000).                           |
-| `--no-browser` | Do not open the browser automatically.                   |
 | `--ui-lang`    | Interface language: `en` or `fr`.                        |
+
+The window uses the web engine built into the system (WebKit on macOS, Edge
+WebView2 on Windows), through pywebview. Exports open a "Save as…" dialog.
 
 In the editor you can:
 
@@ -178,13 +201,41 @@ Python server.
 
 The API is documented at http://localhost:8000/api/docs while the server runs.
 
+## Building the application
+
+The standalone application (Python, FFmpeg and the `small` model inside) is
+built with PyInstaller, for the system it runs on:
+
+```bash
+pip install -e "backend[build]"          # once, in the backend's virtual environment
+python packaging/build.py                # result in packaging/dist/
+```
+
+On macOS this makes `Sous-titreur-<version>-macos-<arch>.dmg`; on Windows,
+`Sous-titreur-<version>-windows-x64.zip`. A macOS build must be made on a Mac
+and a Windows build on Windows.
+
+GitHub does this automatically: pushing a version tag builds the application
+for Apple silicon Macs, Intel Macs and Windows, and prepares a draft Release
+with the three files (`.github/workflows/release.yml`):
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Then open the repository's Releases page on GitHub, check the draft and
+publish it. Update the version in `backend/app/__init__.py` first.
+
 ## Project layout
 
 ```
 bootstrap.py         one-command development setup
 backend/
   app/
-    __main__.py      starts the server and opens the browser
+    __main__.py      starts the server and opens the window (or the browser)
+    desktop.py       the application window (pywebview), "Save as…" for exports
+    ffmpeg.py        where to find FFmpeg
     server.py        web API (FastAPI) and serving of the interface
     jobs.py          background jobs (transcription, video export)
     render.py        video export: overlays the subtitle images with FFmpeg
@@ -212,6 +263,12 @@ frontend/            web interface (React + TypeScript + Vite)
     segmentOps.ts    split, merge, add subtitles
     findReplace.ts   find and replace logic
     time.ts          time display and parsing
+packaging/           standalone application (PyInstaller)
+  build.py           builds it for the current system
+  sous-titreur.spec  what goes inside
+  icons/             application icons (macOS .icns, Windows .ico)
+  THIRD-PARTY-NOTICES.md  licences of the bundled components
+.github/workflows/release.yml  builds the applications on GitHub
 ```
 
 ## License
@@ -220,4 +277,6 @@ GNU General Public License v3.0 or later — see [LICENSE](LICENSE).
 
 The bundled fonts (Montserrat, Poppins, Roboto, Bebas Neue, Anton, Pacifico)
 are distributed under the SIL Open Font License 1.1; their licences are in
-`backend/app/fonts/`.
+`backend/app/fonts/`. The licences of all the components shipped in the
+standalone application (FFmpeg, the Whisper model, libraries) are listed in
+[packaging/THIRD-PARTY-NOTICES.md](packaging/THIRD-PARTY-NOTICES.md).
