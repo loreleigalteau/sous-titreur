@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError } from "../api";
+import { download } from "../download";
 import { useI18n } from "../i18n";
 import { startVideoExport } from "../renderExport";
 import type { Segment, Style } from "../types";
@@ -24,12 +25,6 @@ type Phase =
 
 const POLL_INTERVAL_MS = 1000;
 
-function download(url: string) {
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "";
-  link.click();
-}
 
 export function ExportMenu({ projectId, segments, style, videoSize, saveNow }: Props) {
   const { t, language } = useI18n();
@@ -44,7 +39,7 @@ export function ExportMenu({ projectId, segments, style, videoSize, saveNow }: P
   const exportFile = async (format: Format) => {
     closeMenu();
     // Save first, so the file contains the latest edits.
-    if (await saveNow()) download(api.exportUrl(projectId, format, language));
+    if (await saveNow()) await download(api.exportUrl(projectId, format, language));
   };
 
   const exportVideo = async () => {
@@ -62,7 +57,7 @@ export function ExportMenu({ projectId, segments, style, videoSize, saveNow }: P
         const status = await api.renderStatus(projectId, language);
         if (status.status === "done") {
           update({ step: "done" });
-          download(api.renderFileUrl(projectId));
+          void download(api.renderFileUrl(projectId));
           return;
         }
         if (status.status === "error") {
@@ -129,9 +124,13 @@ export function ExportMenu({ projectId, segments, style, videoSize, saveNow }: P
             {phase.step === "done" && (
               <>
                 <p className="success">{t("render_done")}</p>
-                <a className="button primary" href={api.renderFileUrl(projectId)} download>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => void download(api.renderFileUrl(projectId))}
+                >
                   {t("render_download")}
-                </a>
+                </button>
               </>
             )}
             {phase.step === "error" && <p className="error">{phase.message}</p>}

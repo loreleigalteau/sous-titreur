@@ -27,6 +27,19 @@ export function App() {
   const [failed, setFailed] = useState(false);
   const hash = useHashRoute();
 
+  // A file dropped anywhere else than the import area must not replace the
+  // page with the video (browsers and the application window open dropped
+  // files by default).
+  useEffect(() => {
+    const ignore = (event: DragEvent) => event.preventDefault();
+    window.addEventListener("dragover", ignore);
+    window.addEventListener("drop", ignore);
+    return () => {
+      window.removeEventListener("dragover", ignore);
+      window.removeEventListener("drop", ignore);
+    };
+  }, []);
+
   useEffect(() => {
     api
       .config()

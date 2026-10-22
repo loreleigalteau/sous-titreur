@@ -39,12 +39,15 @@ MESSAGES = {
     "cli_help_output": "fichier SRT de sortie. Par défaut : même nom que la vidéo, en .srt",
 
     # Application server
-    "server_description": "Lance l'éditeur de sous-titres et l'ouvre dans le navigateur.",
+    "server_description": "Lance l'éditeur de sous-titres dans une fenêtre d'application.",
+    "server_help_browser": "ouvrir l'éditeur dans le navigateur plutôt que dans une fenêtre d'application",
     "server_help_port": "port souhaité (le suivant libre est utilisé s'il est occupé)",
-    "server_help_no_browser": "ne pas ouvrir le navigateur automatiquement",
+    "server_help_no_browser": "lancer seulement le serveur, sans fenêtre ni navigateur",
     "server_ready": "L'éditeur de sous-titres est accessible à l'adresse {url}",
     "server_stop_hint": (
         "Gardez cette fenêtre ouverte pendant l'utilisation. Ctrl+C pour arrêter."
     ),
     "server_stopped": "Éditeur de sous-titres arrêté.",
+    "window_hint": "L'éditeur de sous-titres est ouvert. Fermez sa fenêtre pour quitter.",
+    "window_unavailable": "La fenêtre de l'application n'a pas pu s'ouvrir ({details}) ; ouverture du navigateur à la place.",
 }

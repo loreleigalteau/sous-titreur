@@ -35,10 +35,13 @@ MESSAGES = {
     "cli_help_output": "output SRT file. Default: same name as the video, with .srt",
 
     # Application server
-    "server_description": "Start the subtitle editor and open it in the browser.",
+    "server_description": "Start the subtitle editor in an application window.",
+    "server_help_browser": "open the editor in the web browser instead of an application window",
     "server_help_port": "preferred port (the next free one is used if it is busy)",
-    "server_help_no_browser": "do not open the browser automatically",
+    "server_help_no_browser": "start the server only, without window or browser",
     "server_ready": "The subtitle editor is running at {url}",
     "server_stop_hint": "Keep this window open while you use it. Press Ctrl+C to stop.",
     "server_stopped": "Subtitle editor stopped.",
+    "window_hint": "The subtitle editor is open. Close its window to quit.",
+    "window_unavailable": "The application window could not be opened ({details}); opening the browser instead.",
 }
