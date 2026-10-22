@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useI18n } from "../i18n";
 import type { FontInfo, Style } from "../types";
+import { Slider } from "./Slider";
 
 interface Props {
   style: Style;
@@ -10,21 +11,33 @@ interface Props {
   onChange: (change: Partial<Style>, key: string) => void;
 }
 
+// Text colours offered in one click (any other one can be picked).
+const TEXT_COLORS = [
+  ["color_white", "#ffffff"],
+  ["color_yellow", "#ffff00"],
+  ["color_orange", "#ff9500"],
+  ["color_red", "#ff3b30"],
+  ["color_pink", "#ff2d95"],
+  ["color_purple", "#a855f7"],
+  ["color_cyan", "#00d4ff"],
+  ["color_green", "#34c759"],
+  ["color_black", "#000000"],
+] as const;
+
 // Vertical positions offered as buttons (the subtitle can also be dragged).
-const POSITIONS = { position_top: 0.15, position_middle: 0.5, position_bottom: 0.8 } as const;
+const POSITIONS = { position_top: 0.15, position_middle: 0.5, position_bottom: 0.83 } as const;
 
 export function StylePanel({ style, fonts, defaultStyle, onChange }: Props) {
   const { t } = useI18n();
 
   const slider = (field: keyof Style, label: string, min: number, max: number, step: number) => (
     <Field label={label}>
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
         step={step}
         value={style[field] as number}
-        onChange={(event) => onChange({ [field]: Number(event.target.value) }, field)}
+        onChange={(value) => onChange({ [field]: value }, field)}
       />
     </Field>
   );
@@ -65,7 +78,31 @@ export function StylePanel({ style, fonts, defaultStyle, onChange }: Props) {
           {t("style_bold")}
         </label>
         {slider("size", t("style_size"), 0.02, 0.12, 0.001)}
-        {color("text_color", t("style_text_color"))}
+        <div className="field text-color">
+          <span>{t("style_text_color")}</span>
+          <div className="text-color-row">
+            <input
+              type="color"
+              aria-label={t("style_text_color")}
+              value={style.text_color}
+              onChange={(event) => onChange({ text_color: event.target.value }, "text_color")}
+            />
+            <div className="swatches" role="group" aria-label={t("preset_colors")}>
+              {TEXT_COLORS.map(([name, value]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className="swatch"
+                  style={{ background: value }}
+                  title={t(name)}
+                  aria-label={t(name)}
+                  aria-pressed={style.text_color.toLowerCase() === value}
+                  onClick={() => onChange({ text_color: value }, "text_color")}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
         {color("outline_color", t("style_outline_color"))}
         {slider("outline_width", t("style_outline_width"), 0, 0.015, 0.0005)}
         <label className="checkbox">

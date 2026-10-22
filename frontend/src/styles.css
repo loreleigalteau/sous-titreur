@@ -10,6 +10,9 @@
   --danger: #c62828;
   --success: #2e7d32;
   --warning-bg: #fff4e5;
+  /* The logo's gradient, also used for the application's name. */
+  --brand-from: #6366f1;
+  --brand-to: #a855f7;
   --radius: 8px;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--text);
@@ -30,6 +33,9 @@
     --danger: #ef8a8a;
     --success: #81c784;
     --warning-bg: #3a2e1c;
+    /* Lighter shades of the same colours, readable on a dark background. */
+    --brand-from: #818cf8;
+    --brand-to: #c084fc;
   }
 }
 
@@ -327,7 +333,7 @@ button.save-state.error {
   min-width: 260px;
 }
 
-.player-controls input[type="range"] {
+.player-controls .slider {
   flex: 1;
   min-width: 0;
 }
@@ -635,4 +641,334 @@ a.button {
 a.button.primary {
   background: var(--accent);
   color: var(--accent-text);
+}
+
+/* Timeline */
+
+.timeline {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 0.4rem 0 0.75rem;
+}
+
+.timeline-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.timeline-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.timeline-wave {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Shift timings */
+
+.shift-timings summary {
+  cursor: pointer;
+  padding: 0.4rem 0;
+}
+
+.shift-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+
+.shift-form input:not([type="checkbox"]) {
+  width: 7rem;
+}
+
+/* Keyboard shortcuts */
+
+.dialog.shortcuts {
+  width: min(560px, calc(100vw - 2rem));
+}
+
+.shortcuts table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.shortcuts td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  white-space: nowrap;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+/* Logo */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-name {
+  /* Poppins is one of the bundled fonts: round letters like the logo. */
+  font-family: "Poppins", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  /* The gradient shows through the letters. */
+  background: linear-gradient(90deg, var(--brand-from), var(--brand-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-link {
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* Preset colours */
+
+/* The text colour takes a whole row of the style grid: picker + swatches. */
+.text-color {
+  grid-column: 1 / -1;
+}
+
+.text-color-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.text-color-row input[type="color"] {
+  width: 3rem;
+  height: 2rem;
+  padding: 0.1rem;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.swatch {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tagline under the application's name */
+
+/* The title block takes all the room left, so the language switch stays at
+   the right edge whatever the length of the tagline in each language. */
+.brand-block {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Aligned with the title line rather than centred on the whole block, whose
+   height changes with the tagline (one or two lines depending on the language). */
+.home .topbar {
+  align-items: flex-start;
+}
+
+.home .topbar .lang-switch {
+  margin-top: 4px;
+}
+
+.tagline {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Info bubble (InfoTip) */
+
+.with-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.infotip {
+  position: relative;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.infotip-button {
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, serif;
+  line-height: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.infotip-bubble {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(360px, calc(100vw - 2rem));
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  line-height: 1.45;
+}
+
+/* Invisible bridge over the gap above the bubble, so that moving the mouse
+   from the button to the bubble does not close it. */
+.infotip-bubble::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  height: 10px;
+}
+
+.infotip-bubble[hidden] {
+  display: none;
+}
+
+.infotip-bubble code {
+  display: block;
+  margin: 0.4rem 0;
+  padding: 0.3rem 0.4rem;
+  background: var(--bg);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  /* Long folder paths wrap instead of overflowing the bubble. */
+  overflow-wrap: anywhere;
+}
+
+/* Interface language switch (FR | EN) */
+
+.lang-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.lang-switch button {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.lang-switch button:hover {
+  color: var(--text);
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+/* Sliders (Slider.tsx). The browsers' own sliders are replaced so that they
+   look the same everywhere and the coloured part matches the value exactly. */
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Chrome, Safari, Edge: the track's colour stops at --fill, set from the value. */
+.slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--fill, 0%), var(--border) var(--fill, 0%));
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px; /* centred on the 4px track */
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* Firefox draws the coloured part itself. */
+.slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--accent);
 }

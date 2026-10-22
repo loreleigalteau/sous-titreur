@@ -40,13 +40,18 @@ def load_model(model_size: str, on_status: StatusCallback | None = None):
     device="auto" uses an NVIDIA GPU when CUDA is available and falls back to
     the CPU otherwise. compute_type="auto" picks the fastest precision the
     device supports (typically int8 on CPU, float16 on GPU).
+
+    A model already on the computer is loaded from the disk only
+    (local_files_only): otherwise the library would ask Hugging Face for a
+    newer version at every transcription, and a bad connection could make the
+    transcription fail. The internet is only used to download a missing model.
     """
     from faster_whisper import WhisperModel
 
+    cached = is_model_cached(model_size)
     if on_status is not None:
-        status = "loading" if is_model_cached(model_size) else "downloading"
-        on_status(status, model_size)
-    return WhisperModel(model_size, device="auto", compute_type="auto")
+        on_status("loading" if cached else "downloading", model_size)
+    return WhisperModel(model_size, device="auto", compute_type="auto", local_files_only=cached)
 
 
 def transcribe(

@@ -2,6 +2,8 @@ import type { MessageKey } from "./en";
 
 export const fr: Record<MessageKey, string> = {
   app_title: "Sous-titreur",
+  app_tagline:
+    "Des sous-titres automatiques pour vos vidéos : transcrivez, corrigez, stylisez et exportez, le tout en local sur votre ordinateur.",
   language_label: "Langue de l'interface",
   loading: "Chargement…",
   cancel: "Annuler",
@@ -15,6 +17,10 @@ export const fr: Record<MessageKey, string> = {
   import_button: "Choisir une vidéo",
   uploading: "Import de la vidéo… {percent} %",
   projects_title: "Vos projets",
+  projects_location_label: "Où sont enregistrés mes projets ?",
+  projects_location: "Vos projets sont enregistrés sur cet ordinateur, dans ce dossier :",
+  projects_location_note:
+    "Chaque projet garde une copie de sa vidéo et les sous-titres. Rien n'est envoyé sur internet. Supprimer un projet supprime cette copie, jamais votre vidéo d'origine.",
   projects_empty: "Aucun projet pour l'instant. Importez une vidéo pour commencer.",
   project_segments_one: "{count} sous-titre",
   project_segments_other: "{count} sous-titres",
@@ -88,6 +94,16 @@ export const fr: Record<MessageKey, string> = {
   style_bold: "Gras",
   style_size: "Taille",
   style_text_color: "Couleur du texte",
+  preset_colors: "Couleurs prédéfinies",
+  color_white: "Blanc",
+  color_yellow: "Jaune",
+  color_orange: "Orange",
+  color_red: "Rouge",
+  color_pink: "Rose",
+  color_purple: "Violet",
+  color_cyan: "Cyan",
+  color_green: "Vert",
+  color_black: "Noir",
   style_outline: "Contour",
   style_outline_color: "Couleur du contour",
   style_outline_width: "Épaisseur du contour",

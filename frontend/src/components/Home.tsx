@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState, type DragEvent } from "react"
 import { api, ApiError } from "../api";
 import { useI18n } from "../i18n";
 import type { ProjectSummary } from "../types";
+import { InfoTip } from "./InfoTip";
 import { LanguageSelect } from "./LanguageSelect";
 
 /** Home screen: import a video, or reopen a project. */
-export function Home() {
+export function Home({ projectsDir }: { projectsDir: string }) {
   const { t, tn, language } = useI18n();
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [upload, setUpload] = useState<{ progress: number; abort: () => void } | null>(null);
@@ -60,7 +61,13 @@ export function Home() {
   return (
     <div className="page home">
       <header className="topbar">
-        <h1>{t("app_title")}</h1>
+        <div className="brand-block">
+          <h1 className="brand">
+            <img src="/logo.svg" alt="" width={36} height={36} />
+            <span className="brand-name">{t("app_title")}</span>
+          </h1>
+          <p className="tagline">{t("app_tagline")}</p>
+        </div>
         <LanguageSelect />
       </header>
 
@@ -106,7 +113,14 @@ export function Home() {
       {error && <p className="error">{error}</p>}
 
       <section>
-        <h2>{t("projects_title")}</h2>
+        <h2 className="with-info">
+          {t("projects_title")}
+          <InfoTip label={t("projects_location_label")}>
+            {t("projects_location")}
+            <code>{projectsDir}</code>
+            {t("projects_location_note")}
+          </InfoTip>
+        </h2>
         {projects === null ? (
           <p>{t("loading")}</p>
         ) : projects.length === 0 ? (

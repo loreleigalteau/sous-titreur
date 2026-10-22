@@ -67,6 +67,7 @@ export interface Config {
   model_sizes: string[];
   fonts: FontInfo[];
   default_style: Style;
+  projects_dir: string; // folder where projects are saved, on this computer
 }
 
 export type TranscriptionState =

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.render import BLANK, Overlay, build_concat, probe, render_video
+from app.render import BLANK, Overlay, audio_options, build_concat, probe, render_video
 
 needs_ffmpeg = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="FFmpeg not installed")
 
@@ -81,3 +81,53 @@ def test_render_burns_overlay_at_the_right_time(tmp_path: Path):
     assert not is_red(color_at(0.2))
     assert is_red(color_at(0.75))
     assert not is_red(color_at(1.5))
+
+
+def test_audio_options():
+    assert audio_options("aac") == ["-c:a", "copy"]
+    assert audio_options("mp3") == ["-c:a", "copy"]
+    assert audio_options("opus") == ["-c:a", "aac", "-b:a", "192k"]
+    assert audio_options(None) == ["-c:a", "aac", "-b:a", "192k"]  # harmless without sound
+
+
+def make_video_with_sound(path: Path, audio_codec: str) -> Path:
+    subprocess.run(
+        ["ffmpeg", "-loglevel", "error",
+         "-f", "lavfi", "-i", "color=c=blue:s=64x48:r=25:d=1",
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+         "-pix_fmt", "yuv420p", "-c:a", audio_codec, "-shortest", str(path)],
+        check=True,
+    )
+    return path
+
+
+def audio_fingerprint(video: Path) -> str:
+    """MD5 of the compressed sound data, unchanged only if the sound was copied."""
+    return subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-i", str(video), "-map", "0:a", "-c", "copy", "-f", "md5", "-"],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
+
+
+def render_with_blank(video: Path, tmp_path: Path) -> Path:
+    frames = tmp_path / "frames"
+    frames.mkdir()
+    write_png(frames / BLANK, 64, 48, (0, 0, 0, 0))
+    output = tmp_path / "out.mp4"
+    render_video(video, frames, [], output)
+    return output
+
+
+@needs_ffmpeg
+def test_aac_sound_is_copied_without_any_change(tmp_path: Path):
+    video = make_video_with_sound(tmp_path / "in.mp4", "aac")
+    assert probe(video).audio_codec == "aac"
+    output = render_with_blank(video, tmp_path)
+    assert audio_fingerprint(output) == audio_fingerprint(video)
+
+
+@needs_ffmpeg
+def test_other_sound_formats_are_converted_to_aac(tmp_path: Path):
+    video = make_video_with_sound(tmp_path / "in.mkv", "pcm_s16le")
+    assert probe(video).audio_codec == "pcm_s16le"
+    assert probe(render_with_blank(video, tmp_path)).audio_codec == "aac"

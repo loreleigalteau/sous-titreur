@@ -127,7 +127,15 @@ def create_app(
         if request.url.path.startswith("/api/") and request.method not in ("GET", "HEAD"):
             if request.headers.get(APP_HEADER) != "1":
                 return JSONResponse({"detail": "Missing application header"}, status_code=403)
-        return await call_next(request)
+        response = await call_next(request)
+        path = request.url.path
+        if path == "/" or path.endswith(".html"):
+            # The page must always be checked for a newer version, otherwise
+            # the browser keeps showing the old interface after an update.
+            # The script and style files have a version in their name, so
+            # they can stay in the cache.
+            response.headers["Cache-Control"] = "no-cache"
+        return response
 
     def load(project_id: str) -> Project:
         try:
@@ -172,6 +180,8 @@ def create_app(
                 for family in FONTS
             ],
             "default_style": asdict(Style()),
+            # Shown to the user, who may want to back up or find their projects.
+            "projects_dir": str(store.root),
         }
 
     @app.get("/api/fonts/{filename}")
@@ -345,6 +355,14 @@ def create_app(
             media_type=f"{media_type}; charset=utf-8",
             headers=download_headers(f"{project.name}.{fmt}"),
         )
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> FileResponse:
+        # Browsers ask for this address on their own, whatever the page says.
+        icon = STATIC_DIR / "favicon-32.png"
+        if not icon.is_file():
+            raise HTTPException(404, "No icon")
+        return FileResponse(icon, media_type="image/png")
 
     if (STATIC_DIR / "index.html").is_file():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

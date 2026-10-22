@@ -77,9 +77,10 @@ Critère : je transcris, corrige et exporte une vidéo depuis le navigateur.
 - Export MP4 avec sous-titres incrustés (barre de progression) ; export ASS ;
   les exports SRT / VTT restent disponibles.
 
-### Phase 3 — Édition avancée
+### Phase 3 — Édition avancée (faite le 2026-10-20)
 - Timeline avec forme d'onde (wavesurfer.js), segments déplaçables et
-  redimensionnables à la souris.
+  redimensionnables à la souris. L'onde est calculée par le serveur avec
+  FFmpeg (le navigateur ne décode pas l'audio).
 - Décaler tous les timings. (Scinder / fusionner / ajouter / supprimer et
   annuler / rétablir : faits en phase 2 bis.)
 - Raccourcis clavier (lecture/pause, segment suivant, etc.).

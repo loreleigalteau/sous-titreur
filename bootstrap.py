@@ -1,8 +1,11 @@
 """Set up the development environment in one command.
 
 Usage:
-    python3 bootstrap.py                 # check requirements and install
-    python3 bootstrap.py --model small   # also download a Whisper model now
+    python3 bootstrap.py                    # install, and download the "small" model
+    python3 bootstrap.py --model medium     # download another model instead
+    python3 bootstrap.py --model tiny --model small   # several models
+    python3 bootstrap.py --model all        # every model (about 2.2 GB)
+    python3 bootstrap.py --no-model         # download no model
 
 What it does, each step being skipped when already done:
   1. find a supported Python (3.10 to 3.13), even if the one running this
@@ -12,7 +15,9 @@ What it does, each step being skipped when already done:
   3. create backend/.venv;
   4. install the backend and its dependencies in it;
   5. check Node.js, then install and build the web interface (frontend/);
-  6. optionally pre-download a Whisper model.
+  6. download the Whisper speech-recognition model(s), so that the first
+     transcription does not have to wait for it (models already on the
+     computer are detected without contacting the internet).
 
 Node.js is only needed to build the interface; people installing a released
 version will get it already built.
@@ -182,18 +187,56 @@ def build_frontend(npm: str) -> None:
     ok("built into backend/app/static")
 
 
+# The model the application picks by default (TranscriptionPanel.tsx).
+DEFAULT_MODEL = "small"
+# Approximate download sizes, to warn before long downloads.
+MODEL_SIZES_MB = {"tiny": 75, "base": 145, "small": 485, "medium": 1530}
+
+# Runs inside the venv, where faster-whisper is installed. It first looks for
+# the model on the computer only (no network access), and downloads it only
+# if it is missing. The models are stored in the Hugging Face cache, where the
+# application looks for them too. Prints "cached" or "downloaded".
+DOWNLOAD_CODE = """
+import sys
+from faster_whisper.utils import download_model
+try:
+    download_model(sys.argv[1], local_files_only=True)
+    print("cached")
+except Exception:
+    download_model(sys.argv[1])
+    print("downloaded")
+"""
+
+
 def download_model(model: str) -> None:
-    step(f"Downloading Whisper model '{model}'")
-    # Runs inside the venv, where faster-whisper is installed. Models are
-    # cached by Hugging Face, so an already downloaded model is not fetched again.
-    code = f"from faster_whisper.utils import download_model; download_model({model!r})"
-    run([str(venv_python()), "-c", code], cwd=BACKEND)
-    ok("model available")
+    step(f"Whisper model '{model}' (about {MODEL_SIZES_MB[model]} MB)")
+    result = subprocess.run(
+        [str(venv_python()), "-c", DOWNLOAD_CODE, model],
+        cwd=BACKEND, stdout=subprocess.PIPE, text=True,
+    )
+    if result.returncode != 0:
+        raise BootstrapError(f"Could not download the model '{model}'. Check the internet connection.")
+    ok("already on this computer" if result.stdout.strip() == "cached" else "downloaded")
+
+
+def models_to_download(args: argparse.Namespace) -> list[str]:
+    if args.no_model:
+        return []
+    chosen = args.model or [DEFAULT_MODEL]
+    if "all" in chosen:
+        return list(MODEL_SIZES)
+    return list(dict.fromkeys(chosen))  # without duplicates, in the given order
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Set up the sous-titreur development environment.")
-    parser.add_argument("--model", choices=MODEL_SIZES, help="pre-download this Whisper model (optional)")
+    parser.add_argument(
+        "--model",
+        action="append",
+        choices=[*MODEL_SIZES, "all"],
+        help=f"Whisper model to download (default: {DEFAULT_MODEL}); can be repeated, or 'all'",
+    )
+    parser.add_argument("--no-model", action="store_true", help="do not download any model")
     args = parser.parse_args(argv)
 
     try:
@@ -221,8 +264,8 @@ def main(argv: list[str] | None = None) -> int:
         install_dependencies()
         if npm:
             build_frontend(npm)
-        if args.model:
-            download_model(args.model)
+        for model in models_to_download(args):
+            download_model(model)
     except BootstrapError as error:
         print(f"\n{error}", file=sys.stderr)
         return 1

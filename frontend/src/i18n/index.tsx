@@ -9,12 +9,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { en, type MessageKey } from "./en";
 import { fr } from "./fr";
 
-export const MESSAGES = { en, fr } satisfies Record<string, Record<MessageKey, string>>;
+export const MESSAGES = { fr, en } satisfies Record<string, Record<MessageKey, string>>;
 export type Language = keyof typeof MESSAGES;
 export const LANGUAGES = Object.keys(MESSAGES) as Language[];
 
 // Each language is shown in its own name, so anyone can find theirs.
-export const LANGUAGE_NAMES: Record<Language, string> = { en: "English", fr: "Français" };
+export const LANGUAGE_NAMES: Record<Language, string> = { fr: "Français", en: "English" };
 
 type Values = Record<string, string | number>;
 // Keys that have _one / _other plural forms, without the suffix.

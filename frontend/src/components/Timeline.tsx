@@ -4,6 +4,7 @@ import RegionsPlugin, { type Region } from "wavesurfer.js/plugins/regions";
 import { api } from "../api";
 import { useI18n } from "../i18n";
 import { placeOnTimeline, type Span } from "../timing";
+import { Slider } from "./Slider";
 import type { Segment } from "../types";
 
 interface Props {
@@ -24,7 +25,16 @@ const DEFAULT_ZOOM = 100; // pixels per second
 // Blocks closer than this to a neighbour's edge snap to it, in screen pixels.
 const SNAP_PIXELS = 8;
 const COLOR = "rgba(99, 102, 241, 0.22)";
-const ACTIVE_COLOR = "rgba(99, 102, 241, 0.5)";
+const ACTIVE_COLOR = "rgba(99, 102, 241, 0.55)";
+const LABEL_STYLE: Partial<CSSStyleDeclaration> = {
+  padding: "2px 4px",
+  fontSize: "11px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  pointerEvents: "none",
+  color: "var(--text)",
+};
 
 /**
  * Timeline under the video: the sound wave, with one block per subtitle that
@@ -47,22 +57,31 @@ export function Timeline({ projectId, video, duration, segments, activeIndex, di
   const latest = useRef({ segments, zoom, onChange, onSelect });
   latest.current = { segments, zoom, onChange, onSelect };
 
+  const [peaksPerSecond, setPeaksPerSecond] = useState(100);
+
   useEffect(() => {
     api
       .waveform(projectId)
-      .then((data) => setPeaks(data.peaks))
+      .then((data) => {
+        setPeaks(data.peaks);
+        setPeaksPerSecond(data.peaks_per_second);
+      })
       .catch(() => setFailed(true));
   }, [projectId]);
 
   // Create the timeline once the video and the sound wave are ready.
   useEffect(() => {
     if (!container.current || !video || !peaks || !duration) return;
+    // wavesurfer spreads the peaks over the whole duration. The sound track
+    // can be shorter than the picture (or missing): pad it with silence so
+    // that each peak stays at its real time.
+    const total = Math.max(1, Math.round(duration * peaksPerSecond));
+    const aligned = peaks.slice(0, total).concat(new Array(Math.max(0, total - peaks.length)).fill(0));
     const plugin = RegionsPlugin.create();
     const ws = WaveSurfer.create({
       container: container.current,
       media: video,
-      // A video without sound gets a flat line.
-      peaks: [peaks.length ? peaks : [0]],
+      peaks: [aligned],
       duration,
       height: HEIGHT,
       minPxPerSec: latest.current.zoom,
@@ -101,7 +120,7 @@ export function Timeline({ projectId, video, duration, segments, activeIndex, di
       wavesurfer.current = null;
       ws.destroy();
     };
-  }, [video, peaks, duration]);
+  }, [video, peaks, peaksPerSecond, duration]);
 
   // Keep the blocks in line with the subtitles: only what changed is updated,
   // so typing in a subtitle stays fast even with hundreds of them.
@@ -115,7 +134,9 @@ export function Timeline({ projectId, video, duration, segments, activeIndex, di
       const block = blocks.current.get(segment.id);
       if (!block) {
         const label = document.createElement("div");
-        label.className = "timeline-label";
+        // wavesurfer draws in a shadow DOM, out of reach of our stylesheet:
+        // the label is styled here.
+        Object.assign(label.style, LABEL_STYLE);
         label.textContent = segment.text;
         blocks.current.set(
           segment.id,
@@ -161,14 +182,7 @@ export function Timeline({ projectId, video, duration, segments, activeIndex, di
         <span>{t("timeline_label")}</span>
         <label className="timeline-zoom">
           {t("timeline_zoom")}
-          <input
-            type="range"
-            min={10}
-            max={400}
-            step={5}
-            value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
-          />
+          <Slider min={10} max={400} step={5} value={zoom} onChange={setZoom} />
         </label>
       </div>
       {failed && <p className="error">{t("server_unreachable")}</p>}

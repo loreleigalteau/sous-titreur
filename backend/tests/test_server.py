@@ -63,11 +63,12 @@ def wait_for_job(client: TestClient, project_id: str, lang: str = "en", kind: st
     raise AssertionError("transcription did not finish")
 
 
-def test_config(client):
+def test_config(client, store):
     config = client.get("/api/config").json()
     assert config["model_sizes"] == ["tiny", "base", "small", "medium"]
     assert set(config["ui_languages"]) == {"en", "fr"}
     assert config["ui_language"] is None  # not chosen at launch: follow the browser
+    assert config["projects_dir"] == str(store.root)
 
 
 def test_config_with_chosen_language(store):
@@ -268,3 +269,15 @@ def test_ass_export(client):
     ass = client.get(f"/api/projects/{project_id}/export/ass")
     assert ass.status_code == 200
     assert "PlayResX: 1080" in ass.text
+
+
+def test_page_is_never_served_stale(client):
+    assert client.get("/").headers.get("cache-control") == "no-cache"
+
+
+def test_favicon(client):
+    response = client.get("/favicon.ico")
+    # Served once the interface is built (it is part of the build).
+    assert response.status_code in (200, 404)
+    if response.status_code == 200:
+        assert response.headers["content-type"] == "image/png"

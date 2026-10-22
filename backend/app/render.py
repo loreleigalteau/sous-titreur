@@ -22,6 +22,13 @@ from pathlib import Path
 from app.i18n import TranslatableError
 
 BLANK = "blank.png"
+# Picture quality of the export (x264 "constant rate factor": lower is better).
+# 18 is generally considered visually lossless; each step down makes files
+# about 10-15% bigger.
+VIDEO_QUALITY = 18
+# Sound formats that MP4 accepts as they are: they are copied without any
+# loss. Others are converted to AAC.
+COPYABLE_AUDIO = {"aac", "mp3"}
 # Shortest duration given to an entry of the concat file.
 MIN_DURATION = 0.001
 
@@ -42,6 +49,7 @@ class VideoInfo:
     width: int
     height: int
     duration: float
+    audio_codec: str | None = None  # None: the video has no sound
 
 
 def find_tool(name: str) -> str:
@@ -52,11 +60,12 @@ def find_tool(name: str) -> str:
 
 
 def probe(video: Path) -> VideoInfo:
-    """Displayed size and duration of a video, read with ffprobe."""
+    """Displayed size, duration and sound format of a video, read with ffprobe."""
     result = subprocess.run(
         [
-            find_tool("ffprobe"), "-v", "error", "-select_streams", "v:0",
-            "-show_entries", "stream=width,height:stream_side_data=rotation:format=duration",
+            find_tool("ffprobe"), "-v", "error",
+            "-show_entries",
+            "stream=codec_type,codec_name,width,height:stream_side_data=rotation:format=duration",
             "-of", "json", str(video),
         ],
         capture_output=True, text=True,
@@ -64,7 +73,9 @@ def probe(video: Path) -> VideoInfo:
     if result.returncode != 0:
         raise RenderError("render_failed", details=result.stderr.strip())
     data = json.loads(result.stdout)
-    stream = data["streams"][0]
+    streams = data.get("streams", [])
+    stream = next(s for s in streams if s.get("codec_type") == "video")
+    audio = next((s for s in streams if s.get("codec_type") == "audio"), None)
     width, height = int(stream["width"]), int(stream["height"])
     # Phones often store portrait videos as landscape plus a "rotate 90°"
     # flag; FFmpeg and browsers show them rotated, so we do the same.
@@ -73,7 +84,9 @@ def probe(video: Path) -> VideoInfo:
     )
     if abs(rotation) % 180 == 90:
         width, height = height, width
-    return VideoInfo(width, height, float(data["format"]["duration"]))
+    return VideoInfo(
+        width, height, float(data["format"]["duration"]), audio["codec_name"] if audio else None
+    )
 
 
 def build_concat(overlays: list[Overlay], duration: float) -> str:
@@ -100,6 +113,13 @@ def build_concat(overlays: list[Overlay], duration: float) -> str:
     return "\n".join(lines) + "\n"
 
 
+def audio_options(codec: str | None) -> list[str]:
+    """Copy the sound when possible: the subtitles never change it."""
+    if codec in COPYABLE_AUDIO:
+        return ["-c:a", "copy"]
+    return ["-c:a", "aac", "-b:a", "192k"]
+
+
 def build_command(ffmpeg: str, video: Path, concat: Path, output: Path, info: VideoInfo) -> list[str]:
     filters = (
         # Scale the images to the decoded video size, in case the browser
@@ -112,9 +132,9 @@ def build_command(ffmpeg: str, video: Path, concat: Path, output: Path, info: Vi
         "-i", str(video),
         "-f", "concat", "-safe", "0", "-i", str(concat),
         "-filter_complex", filters,
-        "-map", "[v]", "-map", "0:a?",  # "?": the video may have no sound
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20",
-        "-c:a", "aac", "-b:a", "192k",
+        "-map", "[v]", "-map", "0:a:0?",  # the first sound track; "?": there may be none
+        "-c:v", "libx264", "-preset", "medium", "-crf", str(VIDEO_QUALITY),
+        *audio_options(info.audio_codec),
         "-movflags", "+faststart",  # lets players start before the whole file is read
         "-progress", "pipe:1", "-nostats",
         str(output),

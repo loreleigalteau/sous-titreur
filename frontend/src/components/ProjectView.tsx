@@ -320,6 +320,9 @@ export function ProjectView({ projectId, config }: { projectId: string; config: 
   return (
     <div className="editor">
       <header className="topbar">
+        <a href="#/" className="brand-link" title={t("app_title")}>
+          <img src="/logo.svg" alt={t("app_title")} width={28} height={28} />
+        </a>
         <a href="#/" className="back">
           {t("back_to_projects")}
         </a>

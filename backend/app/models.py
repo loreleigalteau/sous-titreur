@@ -43,17 +43,17 @@ class Style:
 
     font: str = "Montserrat"  # one of the bundled fonts (app/fonts.py)
     bold: bool = True
-    size: float = 0.05  # font size, fraction of the video height
-    text_color: str = "#ffffff"
+    size: float = 0.038  # font size, fraction of the video height
+    text_color: str = "#ffff00"  # the standard yellow of office software
     outline_color: str = "#000000"
-    outline_width: float = 0.004  # fraction of the video height, 0 = no outline
+    outline_width: float = 0.002  # fraction of the video height, 0 = no outline
     background: bool = False  # draw a box behind the text
     background_color: str = "#000000"
     background_opacity: float = 0.6
     highlight_color: str = "#ffd700"  # used by the word-by-word phase
     # Center of the text block, as fractions of the video width and height.
     x: float = 0.5
-    y: float = 0.75
+    y: float = 0.83
     max_width: float = 0.9  # lines wrap beyond this fraction of the video width
 
 

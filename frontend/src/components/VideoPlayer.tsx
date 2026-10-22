@@ -3,6 +3,7 @@ import { useI18n } from "../i18n";
 import { drawSubtitle, layoutSubtitle, loadFont, type Box } from "../subtitleRenderer";
 import { formatTime } from "../time";
 import type { Segment, Style } from "../types";
+import { Slider } from "./Slider";
 
 /** Index of the subtitle shown at `time`, or -1. */
 export function activeSegmentIndex(segments: Segment[], time: number): number {
@@ -234,15 +235,14 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
           {playing ? "❚❚" : "▶"}
           <span className="visually-hidden">{playing ? t("pause") : t("play")}</span>
         </button>
-        <input
-          type="range"
+        <Slider
           min={0}
           max={duration || 0}
           step={0.01}
           value={time}
           aria-label={t("seek")}
-          onChange={(event) => {
-            if (videoRef.current) videoRef.current.currentTime = Number(event.target.value);
+          onChange={(seconds) => {
+            if (videoRef.current) videoRef.current.currentTime = seconds;
           }}
         />
         <span className="player-time">

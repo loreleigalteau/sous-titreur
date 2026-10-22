@@ -47,7 +47,7 @@ export function App() {
   const projectId = hash.match(/^#\/project\/([0-9a-f]+)$/)?.[1];
   return (
     <I18nProvider initial={language}>
-      {projectId ? <ProjectView key={projectId} projectId={projectId} config={config} /> : <Home />}
+      {projectId ? <ProjectView key={projectId} projectId={projectId} config={config} /> : <Home projectsDir={config.projects_dir} />}
     </I18nProvider>
   );
 }
