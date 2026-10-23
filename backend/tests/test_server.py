@@ -288,7 +288,7 @@ def test_presets_api(client):
     listing = client.get("/api/presets").json()
     assert listing["default"] == "builtin:social"
     assert [p["id"] for p in listing["builtin"]] == [
-        "builtin:classic", "builtin:social", "builtin:big_centered", "builtin:black_box"
+        "builtin:classic", "builtin:social", "builtin:big_centered", "builtin:karaoke", "builtin:black_box"
     ]
     assert listing["custom"] == []
 
@@ -325,3 +325,13 @@ def test_new_projects_start_with_the_default_preset(client):
     assert client.put("/api/presets/default", json={"id": "nope"}, headers=HEADERS).status_code == 404
     assert client.put("/api/presets/default", json={"id": "builtin:classic"}, headers=HEADERS).status_code == 204
     assert upload(client).json()["style"]["font"] == "Roboto"
+
+
+@pytest.mark.parametrize("change", [{"highlight_scale": 3}, {"highlight_scale": 0.5}, {"max_words": -1}, {"max_words": 99}])
+def test_word_by_word_settings_are_checked(client, change):
+    project = upload(client).json()
+    style = {**project["style"], **change}
+    response = client.put(
+        f"/api/projects/{project['id']}/content", json={"segments": [], "style": style}, headers=HEADERS
+    )
+    assert response.status_code == 422

@@ -50,7 +50,10 @@ class Style:
     background: bool = False  # draw a box behind the text
     background_color: str = "#000000"
     background_opacity: float = 0.6
-    highlight_color: str = "#ffd700"  # used by the word-by-word phase
+    highlight_color: str = "#ffd700"  # colour of the spoken word
+    highlight: bool = False  # highlight the word being spoken
+    highlight_scale: float = 1.0  # size of the spoken word (1 = same size as the others)
+    max_words: int = 0  # words on screen at a time, 0 = the whole subtitle
     # Center of the text block, as fractions of the video width and height.
     x: float = 0.5
     y: float = 0.83

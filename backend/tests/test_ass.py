@@ -1,5 +1,5 @@
 from app.ass import ass_color, escape_text, format_timestamp, segments_to_ass
-from app.models import Segment, Style
+from app.models import Segment, Style, Word
 
 
 def test_format_timestamp():
@@ -35,3 +35,24 @@ def test_background_uses_box_border_style():
     fields = style_line.split(",")
     assert fields[5] == "&H00332211"  # outline colour = box colour
     assert fields[15] == "3"  # border style 3 = box
+
+
+def test_word_by_word_export():
+    segment = Segment(
+        1, 0.0, 2.0, "Bonjour tous",
+        [Word("Bonjour", 0.0, 0.8), Word("tous", 1.0, 1.8)],
+    )
+    style = Style(highlight=True, highlight_color="#ffff00", highlight_scale=1.2)
+    dialogues = [l for l in segments_to_ass([segment], style, 100, 100).splitlines() if l.startswith("Dialogue")]
+    assert len(dialogues) == 2
+    # Yellow is &H00FFFF in ASS (blue, green, red); 120 % size; back to normal after.
+    assert dialogues[0].endswith("{\\1c&H00FFFF&\\fscx120\\fscy120}Bonjour{\\r} tous")
+    assert dialogues[0].startswith("Dialogue: 0,0:00:00.00,0:00:01.00,")
+    assert dialogues[1].endswith("Bonjour {\\1c&H00FFFF&\\fscx120\\fscy120}tous{\\r}")
+
+
+def test_a_few_words_at_a_time_without_highlight():
+    segment = Segment(1, 0.0, 3.0, "un deux trois", [Word("un", 0, 1), Word("deux", 1, 2), Word("trois", 2, 3)])
+    ass = segments_to_ass([segment], Style(max_words=2), 100, 100)
+    texts = [l.rsplit("}", 1)[-1] for l in ass.splitlines() if l.startswith("Dialogue")]
+    assert texts == ["un deux", "trois"]

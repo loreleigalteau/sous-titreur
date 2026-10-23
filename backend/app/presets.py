@@ -30,6 +30,10 @@ BUILTIN_PRESETS: dict[str, Style] = {
         font="Anton", bold=False, text_color="#ffffff", size=0.08, outline_width=0.005,
         y=0.5, max_width=0.85,
     ),
+    "karaoke": Style(
+        text_color="#ffffff", size=0.05, outline_width=0.003, highlight=True,
+        highlight_color="#ffff00", highlight_scale=1.2, max_words=3, y=0.75,
+    ),
     "black_box": Style(
         font="Poppins", text_color="#ffffff", size=0.04, outline_width=0.0,
         background=True, background_opacity=0.7, y=0.85,

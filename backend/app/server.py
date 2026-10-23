@@ -109,6 +109,8 @@ def check_style(style: Style) -> None:
     numbers = (style.size, style.outline_width, style.background_opacity, style.x, style.y, style.max_width)
     if not all(0 <= n <= 1 for n in numbers):
         raise HTTPException(422, "Value out of range")
+    if not (1 <= style.highlight_scale <= 2 and 0 <= style.max_words <= 20):
+        raise HTTPException(422, "Value out of range")
 
 
 def download_headers(filename: str) -> dict[str, str]:

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from app.karaoke import subtitle_frames
 from app.models import Segment, Style
 from app.srt import clean_text
 
@@ -37,6 +38,20 @@ def escape_text(text: str) -> str:
     # as \N: they are replaced so that the text shows as typed.
     text = text.replace("\\", "⧵").replace("{", "(").replace("}", ")")
     return text.replace("\n", "\\N")
+
+
+def highlighted(words: list[str], index: int, style: Style) -> str:
+    """The words of a frame, the spoken one in its colour and size.
+
+    {\\1c…} changes the colour, {\\fscx…\\fscy…} the size, {\\r} goes back
+    to the normal style for the following words.
+    """
+    color = ass_color(style.highlight_color)[4:]  # without the alpha: &HBBGGRR
+    scale = round(style.highlight_scale * 100)
+    parts = [escape_text(w) for w in words]
+    if 0 <= index < len(parts):
+        parts[index] = f"{{\\1c&H{color}&\\fscx{scale}\\fscy{scale}}}{parts[index]}{{\\r}}"
+    return " ".join(parts)
 
 
 def segments_to_ass(segments: Iterable[Segment], style: Style, width: int, height: int) -> str:
@@ -75,9 +90,18 @@ def segments_to_ass(segments: Iterable[Segment], style: Style, width: int, heigh
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
     ]
+    word_by_word = style.highlight or style.max_words > 0
     for segment in segments:
         text = clean_text(segment.text)
         if not text:
+            continue
+        if word_by_word:
+            # One line per moment: the words on screen, the spoken one highlighted.
+            for frame in subtitle_frames(segment, style):
+                lines.append(
+                    f"Dialogue: 0,{format_timestamp(frame.start)},{format_timestamp(frame.end)},"
+                    f"Default,,0,0,0,,{position}{highlighted(frame.words, frame.highlight, style)}"
+                )
             continue
         end = max(segment.end, segment.start)
         lines.append(
