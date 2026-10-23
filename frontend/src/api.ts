@@ -2,6 +2,8 @@
 import type {
   Config,
   Overlay,
+  Preset,
+  PresetListing,
   Project,
   ProjectSummary,
   RenderStatus,
@@ -56,6 +58,13 @@ export const api = {
     request<{ peaks_per_second: number; peaks: number[] }>("GET", `${projectUrl(id)}/waveform`),
   exportUrl: (id: string, format: "srt" | "vtt" | "ass", language: string) =>
     `${projectUrl(id)}/export/${format}?lang=${language}`,
+
+  presets: () => request<PresetListing>("GET", "/api/presets"),
+  createPreset: (name: string, style: Style) => request<Preset>("POST", "/api/presets", { name, style }),
+  updatePreset: (id: string, change: { name?: string; style?: Style }) =>
+    request<Preset>("PUT", `/api/presets/${encodeURIComponent(id)}`, change),
+  deletePreset: (id: string) => request<void>("DELETE", `/api/presets/${encodeURIComponent(id)}`),
+  setDefaultPreset: (id: string) => request<void>("PUT", "/api/presets/default", { id }),
 
   // Video export: see backend/app/server.py for the sequence of calls.
   clearFrames: (id: string) => request<void>("DELETE", `${projectUrl(id)}/render/frames`),

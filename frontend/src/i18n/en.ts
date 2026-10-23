@@ -114,6 +114,27 @@ export const en = {
   position_bottom: "Bottom",
   style_reset: "Reset the style",
 
+  // Style presets
+  presets_label: "Preset",
+  presets_builtin: "Ready-made",
+  presets_mine: "My presets",
+  preset_classic: "Classic",
+  preset_social: "Social media",
+  preset_big_centered: "Big centred text",
+  preset_black_box: "Black box",
+  preset_custom_settings: "Custom settings",
+  preset_modified: "{name} (modified)",
+  preset_save_as: "Save as preset…",
+  preset_name_placeholder: "Preset name",
+  preset_save: "Save",
+  preset_update: "Update",
+  preset_update_hint: "Save the current settings in the preset “{name}”",
+  preset_rename: "Rename",
+  preset_delete: "Delete",
+  preset_confirm_delete: "Delete the preset “{name}”? Projects that use this style keep it.",
+  preset_is_default: "New projects start with this preset.",
+  preset_make_default: "Use for new projects",
+
   // Subtitle length
   length_label: "Subtitle length",
   length_short: "Short: a few words (TikTok, Reels)",

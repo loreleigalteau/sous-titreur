@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useI18n } from "../i18n";
 import type { FontInfo, Style } from "../types";
+import { PresetPicker } from "./PresetPicker";
 import { Slider } from "./Slider";
 
 interface Props {
@@ -55,6 +56,7 @@ export function StylePanel({ style, fonts, defaultStyle, onChange }: Props) {
   return (
     <section className="panel style-panel">
       <h2>{t("style_title")}</h2>
+      <PresetPicker style={style} onApply={(preset) => onChange(preset, "preset")} />
       <div className="style-grid">
         <Field label={t("style_font")}>
           <select

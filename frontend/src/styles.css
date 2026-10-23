@@ -972,3 +972,37 @@ kbd {
   border: 2px solid var(--surface);
   box-shadow: 0 0 0 1px var(--accent);
 }
+
+/* Style presets (PresetPicker.tsx) */
+
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.presets select {
+  max-width: 22rem;
+}
+
+.preset-actions,
+.preset-name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.preset-name input {
+  flex: 1;
+  min-width: 10rem;
+  max-width: 22rem;
+}
+
+.presets .hint,
+.presets .link-button {
+  align-self: flex-start;
+  margin: 0;
+}

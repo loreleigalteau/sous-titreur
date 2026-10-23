@@ -117,6 +117,28 @@ export const fr: Record<MessageKey, string> = {
   position_bottom: "En bas",
   style_reset: "Réinitialiser le style",
 
+  // Style presets
+  presets_label: "Préréglage",
+  presets_builtin: "Prêts à l'emploi",
+  presets_mine: "Mes préréglages",
+  preset_classic: "Classique",
+  preset_social: "Réseaux sociaux",
+  preset_big_centered: "Gros texte centré",
+  preset_black_box: "Fond noir",
+  preset_custom_settings: "Réglages personnalisés",
+  preset_modified: "{name} (modifié)",
+  preset_save_as: "Enregistrer comme préréglage…",
+  preset_name_placeholder: "Nom du préréglage",
+  preset_save: "Enregistrer",
+  preset_update: "Mettre à jour",
+  preset_update_hint: "Enregistrer les réglages actuels dans le préréglage « {name} »",
+  preset_rename: "Renommer",
+  preset_delete: "Supprimer",
+  preset_confirm_delete:
+    "Supprimer le préréglage « {name} » ? Les projets qui utilisent ce style le gardent.",
+  preset_is_default: "Les nouveaux projets commencent avec ce préréglage.",
+  preset_make_default: "Utiliser pour les nouveaux projets",
+
   // Subtitle length
   length_label: "Longueur des sous-titres",
   length_short: "Courts : quelques mots (TikTok, Reels)",

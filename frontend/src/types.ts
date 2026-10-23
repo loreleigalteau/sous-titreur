@@ -48,6 +48,19 @@ export interface Overlay {
   end: number;
 }
 
+/** A saved style: ready-made ("builtin:…") or created by the user. */
+export interface Preset {
+  id: string;
+  name: string; // for ready-made presets, a key translated by the interface
+  style: Style;
+}
+
+export interface PresetListing {
+  default: string; // id of the preset new projects start with
+  builtin: Preset[];
+  custom: Preset[];
+}
+
 export interface FontInfo {
   name: string;
   regular: string; // URL of the font file
