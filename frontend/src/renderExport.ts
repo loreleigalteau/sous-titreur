@@ -4,6 +4,7 @@
  * server, which lays the images over the video with FFmpeg.
  */
 import { api } from "./api";
+import { subtitleFrames } from "./karaoke";
 import { drawSubtitle, layoutSubtitle, loadFont } from "./subtitleRenderer";
 import type { Overlay, Segment, Style } from "./types";
 
@@ -36,15 +37,19 @@ export async function startVideoExport(
   // Shown between subtitles.
   await api.uploadFrame(projectId, "blank.png", await toPng(canvas));
 
-  const visible = segments.filter((s) => s.text.trim() && s.end > s.start);
+  // One image per moment: per subtitle, or per word with word-by-word on.
+  const frames = segments
+    .filter((s) => s.text.trim() && s.end > s.start)
+    .flatMap((segment) => subtitleFrames(segment, style));
   const overlays: Overlay[] = [];
-  for (const [i, segment] of visible.entries()) {
+  for (const [i, frame] of frames.entries()) {
     ctx.clearRect(0, 0, size.width, size.height);
-    drawSubtitle(ctx, layoutSubtitle(ctx, segment.text, style, size.width, size.height), style, size.height);
+    const layout = layoutSubtitle(ctx, frame.text, style, size.width, size.height);
+    drawSubtitle(ctx, layout, style, size.height, frame.highlight);
     const image = `${i + 1}.png`;
     await api.uploadFrame(projectId, image, await toPng(canvas));
-    overlays.push({ image, start: segment.start, end: segment.end });
-    onProgress(i + 1, visible.length);
+    overlays.push({ image, start: frame.start, end: frame.end });
+    onProgress(i + 1, frames.length);
   }
   await api.startRender(projectId, overlays);
 }

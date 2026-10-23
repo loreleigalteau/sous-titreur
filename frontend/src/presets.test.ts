@@ -5,7 +5,7 @@ import type { Preset, Style } from "./types";
 const base: Style = {
   font: "Montserrat", bold: true, size: 0.038, text_color: "#ffff00", outline_color: "#000000",
   outline_width: 0.002, background: false, background_color: "#000000", background_opacity: 0.6,
-  highlight_color: "#ffd700", x: 0.5, y: 0.83, max_width: 0.9,
+  highlight_color: "#ffd700", highlight: false, highlight_scale: 1, max_words: 0, x: 0.5, y: 0.83, max_width: 0.9,
 };
 const preset = (id: string, change: Partial<Style> = {}): Preset => ({ id, name: id, style: { ...base, ...change } });
 

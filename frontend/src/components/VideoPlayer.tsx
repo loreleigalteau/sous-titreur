@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useRef, useState, type PointerEvent } from "react";
 import { useI18n } from "../i18n";
+import { frameAt, subtitleFrames, type Frame } from "../karaoke";
 import { drawSubtitle, layoutSubtitle, loadFont, type Box } from "../subtitleRenderer";
 import { formatTime } from "../time";
 import type { Segment, Style } from "../types";
@@ -69,25 +70,43 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
   const bounds = useRef<Box | null>(null); // subtitle area, in canvas pixels
 
   // Read by the animation loop, which must not restart on every edit.
-  const latest = useRef({ segments, activeIndex, onActiveChange });
-  latest.current = { segments, activeIndex, onActiveChange };
+  // What is on screen now: the words of the current subtitle and the spoken one.
+  const [shown, setShown] = useState<Frame | null>(null);
+  const shownKey = useRef("");
+  // Brings the current subtitle and spoken word up to date with the video.
+  // Reassigned at every render, so it always sees the latest subtitles and style.
+  const sync = useRef(() => {});
+  sync.current = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const index = activeSegmentIndex(segments, video.currentTime);
+    if (index !== activeIndex) onActiveChange(index);
+    const segment = segments[index];
+    const current = segment ? frameAt(subtitleFrames(segment, style), video.currentTime) : null;
+    // Re-render only when the words or the spoken word change.
+    const key = current ? `${index}|${current.start}|${current.highlight}|${current.text}` : "";
+    if (key !== shownKey.current) {
+      shownKey.current = key;
+      setShown(current);
+    }
+  };
 
   useEffect(() => {
     // "timeupdate" only fires about 4 times per second, which makes subtitles
     // appear late. Checking on every frame keeps them in sync.
     let frameId = 0;
     const tick = () => {
-      const video = videoRef.current;
-      if (video) {
-        const { segments, activeIndex, onActiveChange } = latest.current;
-        const index = activeSegmentIndex(segments, video.currentTime);
-        if (index !== activeIndex) onActiveChange(index);
-      }
+      sync.current();
       frameId = requestAnimationFrame(tick);
     };
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
   }, []);
+
+  // Also when nothing is playing: the system pauses the frame-by-frame
+  // checks of windows in the background, but a jump in the video or an edit
+  // must still show up.
+  useEffect(() => sync.current(), [segments, style]);
 
   // Fit the video in the available space, keeping its proportions.
   useEffect(() => {
@@ -118,11 +137,20 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
   }, [style]);
 
   const shownStyle = dragPosition ? { ...style, ...dragPosition } : style;
-  const activeText = segments[activeIndex]?.text ?? "";
+  const activeText = shown?.text ?? "";
   // While paused between subtitles, show a sample so the style and position
   // can be adjusted.
   const sample = !activeText.trim() && !playing;
-  const text = sample ? (segments.find((s) => s.text.trim())?.text ?? t("style_sample")) : activeText;
+  const sampleFrame = (): Frame | null => {
+    const first = segments.find((s) => s.text.trim());
+    if (!first) return { start: 0, end: 0, text: t("style_sample"), highlight: style.highlight ? 1 : -1 };
+    // The second frame: with word-by-word on, it shows the effect on a word.
+    const frames = subtitleFrames(first, style);
+    return frames[Math.min(1, frames.length - 1)] ?? null;
+  };
+  const displayed = sample ? sampleFrame() : shown;
+  const text = displayed?.text ?? "";
+  const highlight = displayed?.highlight ?? -1;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -140,7 +168,7 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
     const layout = layoutSubtitle(ctx, text, shownStyle, canvas.width, canvas.height);
     bounds.current = layout.bounds;
     ctx.globalAlpha = sample ? 0.55 : 1;
-    drawSubtitle(ctx, layout, shownStyle, canvas.height);
+    drawSubtitle(ctx, layout, shownStyle, canvas.height, highlight);
     ctx.globalAlpha = 1;
     if (dragPosition && dragPosition.x === 0.5) {
       // Guide showing that the subtitle is centred.
@@ -151,7 +179,7 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
       ctx.lineTo(canvas.width / 2, canvas.height);
       ctx.stroke();
     }
-  }, [frame, text, sample, shownStyle, dragPosition, fontVersion]);
+  }, [frame, text, highlight, sample, shownStyle, dragPosition, fontVersion]);
 
   /** Pointer position as fractions of the frame, and in canvas pixels. */
   const pointer = (event: PointerEvent<HTMLCanvasElement>) => {
@@ -218,7 +246,11 @@ export const VideoPlayer = forwardRef<HTMLVideoElement, Props>(function VideoPla
           }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
+          onTimeUpdate={(event) => {
+            setTime(event.currentTarget.currentTime);
+            sync.current();
+          }}
+          onSeeked={() => sync.current()}
           onError={() => setUnsupported(true)}
         />
         <canvas

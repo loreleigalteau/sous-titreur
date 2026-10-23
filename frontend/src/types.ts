@@ -25,7 +25,10 @@ export interface Style {
   background: boolean;
   background_color: string;
   background_opacity: number; // 0 to 1
-  highlight_color: string;
+  highlight_color: string; // colour of the spoken word
+  highlight: boolean; // highlight the word being spoken
+  highlight_scale: number; // size of the spoken word (1 = same size)
+  max_words: number; // words on screen at a time, 0 = the whole subtitle
   x: number; // center of the text, fraction of the video width
   y: number; // fraction of the video height
   max_width: number; // fraction of the video width

@@ -25,6 +25,9 @@ const TEXT_COLORS = [
   ["color_black", "#000000"],
 ] as const;
 
+// Size of the spoken word when "bigger" is ticked (1 = same size).
+const BIGGER_WORD = 1.2;
+
 // Vertical positions offered as buttons (the subtitle can also be dragged).
 const POSITIONS = { position_top: 0.15, position_middle: 0.5, position_bottom: 0.83 } as const;
 
@@ -122,6 +125,46 @@ export function StylePanel({ style, fonts, defaultStyle, onChange }: Props) {
           </>
         )}
         {slider("max_width", t("style_max_width"), 0.4, 1, 0.01)}
+      </div>
+
+      <h3 className="style-subtitle">{t("style_word_by_word")}</h3>
+      <div className="style-grid">
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={style.highlight}
+            onChange={(event) => onChange({ highlight: event.target.checked }, "highlight")}
+          />
+          {t("style_highlight")}
+        </label>
+        {style.highlight && (
+          <>
+            {color("highlight_color", t("style_highlight_color"))}
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={style.highlight_scale > 1}
+                onChange={(event) =>
+                  onChange({ highlight_scale: event.target.checked ? BIGGER_WORD : 1 }, "highlight_scale")
+                }
+              />
+              {t("style_highlight_bigger")}
+            </label>
+          </>
+        )}
+        <Field label={t("style_max_words")}>
+          <select
+            value={style.max_words}
+            onChange={(event) => onChange({ max_words: Number(event.target.value) }, "max_words")}
+          >
+            <option value={0}>{t("style_max_words_all")}</option>
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </Field>
       </div>
 
       <div className="style-position">
