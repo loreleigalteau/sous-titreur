@@ -16,6 +16,7 @@ import re
 import shutil
 import sys
 import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +35,23 @@ _project_json = TypeAdapter(Project)
 
 class ProjectNotFound(LookupError):
     pass
+
+
+def replace_file(source: Path, target: Path, attempts: int = 10) -> None:
+    """Replace `target` with `source` in one step.
+
+    On Windows this fails while another program has the file open (an
+    antivirus or the search indexer often does, briefly): try again a few
+    times before giving up.
+    """
+    for attempt in range(attempts):
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(0.05 * (attempt + 1))
 
 
 def default_data_dir() -> Path:
@@ -79,9 +97,13 @@ class ProjectStore:
 
     def get(self, project_id: str) -> Project:
         path = self._folder(project_id) / PROJECT_FILE
-        if not path.is_file():
-            raise ProjectNotFound(project_id)
-        return _project_json.validate_json(path.read_bytes())
+        # Read under the same lock as saves: on Windows, a file being read
+        # cannot be replaced, so a save happening at that moment would fail.
+        with self._lock:
+            if not path.is_file():
+                raise ProjectNotFound(project_id)
+            data = path.read_bytes()
+        return _project_json.validate_json(data)
 
     def save(self, project: Project) -> None:
         folder = self._folder(project.id)
@@ -90,7 +112,7 @@ class ProjectStore:
         tmp = folder / f"{PROJECT_FILE}.tmp"
         with self._lock:
             tmp.write_bytes(_project_json.dump_json(project, indent=2))
-            os.replace(tmp, folder / PROJECT_FILE)
+            replace_file(tmp, folder / PROJECT_FILE)
 
     def list(self) -> list[Project]:
         projects = []

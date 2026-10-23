@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from app import storage
 from app.models import Segment, Word
 from app.storage import ProjectNotFound, ProjectStore, safe_suffix
 
@@ -52,3 +53,32 @@ def test_invalid_ids_are_rejected(store: ProjectStore, bad_id: str):
 )
 def test_safe_suffix(filename: str, expected: str):
     assert safe_suffix(filename) == expected
+
+
+def test_save_retries_while_another_program_holds_the_file(store: ProjectStore, monkeypatch):
+    """On Windows, replacing a file fails while it is open elsewhere."""
+    project = store.create("a", ".mp4")
+    real_replace = storage.os.replace
+    failures = iter([True, True, False])
+
+    def flaky_replace(source, target):
+        if next(failures):
+            raise PermissionError("[WinError 5] Access is denied")
+        real_replace(source, target)
+
+    monkeypatch.setattr(storage.os, "replace", flaky_replace)
+    project.language = "fr"
+    store.save(project)
+    assert store.get(project.id).language == "fr"
+
+
+def test_save_gives_up_after_repeated_failures(store: ProjectStore, monkeypatch):
+    project = store.create("a", ".mp4")
+
+    def always_denied(source, target):
+        raise PermissionError("[WinError 5] Access is denied")
+
+    monkeypatch.setattr(storage.os, "replace", always_denied)
+    monkeypatch.setattr(storage.time, "sleep", lambda seconds: None)
+    with pytest.raises(PermissionError):
+        store.save(project)
