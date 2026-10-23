@@ -96,10 +96,14 @@ Critère : je transcris, corrige et exporte une vidéo depuis le navigateur.
   `presets.json` (dossier de données). Partage de préréglages : plus tard.
   (Panneau de style, export ASS et MP4 incrusté : faits en phase 2 bis.)
 
-### Phase 5 — Animation mot par mot
+### Phase 5 — Animation mot par mot (faite le 2026-10-23)
 - Surlignage du mot prononcé (effet karaoké) dans l'aperçu, l'export MP4 et
-  l'export ASS.
-- Option d'affichage d'un nombre limité de mots à la fois (format vidéo courte).
+  l'export ASS : autre couleur, et en option plus grand (la place est réservée
+  pour que les mots ne bougent pas). Effets retenus par l'utilisatrice :
+  couleur et taille (pas de boîte ni d'apparition progressive).
+- Option d'affichage d'un nombre limité de mots à la fois (format vidéo courte) :
+  réglage d'affichage, la liste des sous-titres ne change pas.
+- Préréglage prêt à l'emploi « Karaoké ». SRT / VTT : inchangés (sous-titres entiers).
 
 ### Phase 6 — Distribution
 Public : tous les utilisateurs, sur macOS et Windows (décision du 2026-10-22).

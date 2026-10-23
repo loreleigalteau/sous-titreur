@@ -121,8 +121,10 @@ In the editor you can:
 - find and replace across all subtitles (match case, whole word);
 - choose the font, size, colours (with one-click preset text colours),
   outline or background box, and drag the subtitle anywhere on the video;
-- apply a ready-made style (classic, social media, big centred text, black
-  box), or save your own settings as a preset; the preset marked ★ is the
+- word by word: highlight the word being spoken (another colour, optionally
+  bigger), and show only a few words at a time for short videos;
+- apply a ready-made style (classic, social media, big centred text, karaoke,
+  black box), or save your own settings as a preset; the preset marked ★ is the
   style every new project starts with. Presets are kept in `presets.json`, in
   the data folder;
 - export a video with the subtitles burned in (MP4), or the subtitle file
@@ -248,6 +250,7 @@ backend/
     render.py        video export: overlays the subtitle images with FFmpeg
     segmentation.py  cutting subtitles to a maximum length
     presets.py       style presets (ready-made and the user's own)
+    karaoke.py       word by word: what is on screen at each moment (ASS export)
     waveform.py      sound wave for the timeline (computed with FFmpeg)
     storage.py       projects saved as JSON on disk
     cli.py           command-line entry point
@@ -265,6 +268,7 @@ frontend/            web interface (React + TypeScript + Vite)
     components/      screens and building blocks
     i18n/            interface texts, one file per language (en.ts, fr.ts)
     subtitleRenderer.ts  draws a subtitle (preview and export)
+    karaoke.ts       word by word: what is on screen at each moment
     renderExport.ts  prepares a video export
     history.ts       undo / redo
     timing.ts        timeline snapping, shifting, navigation between subtitles
