@@ -88,8 +88,12 @@ Critère : je transcris, corrige et exporte une vidéo depuis le navigateur.
   annuler / rétablir : faits en phase 2 bis.)
 - Raccourcis clavier (lecture/pause, segment suivant, etc.).
 
-### Phase 4 — Styles et export vidéo
-- Quelques préréglages de style (classique, réseaux sociaux, gros texte centré).
+### Phase 4 — Styles et export vidéo (faite le 2026-10-23)
+- Préréglages de style prêts à l'emploi (classique, réseaux sociaux, gros
+  texte centré, fond noir) et préréglages de l'utilisateur (enregistrer,
+  mettre à jour, renommer, supprimer), position comprise ; le préréglage
+  marqué ★ est le style de départ des nouveaux projets. Enregistrés dans
+  `presets.json` (dossier de données). Partage de préréglages : plus tard.
   (Panneau de style, export ASS et MP4 incrusté : faits en phase 2 bis.)
 
 ### Phase 5 — Animation mot par mot

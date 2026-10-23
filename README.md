@@ -121,6 +121,10 @@ In the editor you can:
 - find and replace across all subtitles (match case, whole word);
 - choose the font, size, colours (with one-click preset text colours),
   outline or background box, and drag the subtitle anywhere on the video;
+- apply a ready-made style (classic, social media, big centred text, black
+  box), or save your own settings as a preset; the preset marked ★ is the
+  style every new project starts with. Presets are kept in `presets.json`, in
+  the data folder;
 - export a video with the subtitles burned in (MP4), or the subtitle file
   alone: SRT, VTT, or ASS (keeps the style, for other software).
 
@@ -240,6 +244,7 @@ backend/
     jobs.py          background jobs (transcription, video export)
     render.py        video export: overlays the subtitle images with FFmpeg
     segmentation.py  cutting subtitles to a maximum length
+    presets.py       style presets (ready-made and the user's own)
     waveform.py      sound wave for the timeline (computed with FFmpeg)
     storage.py       projects saved as JSON on disk
     cli.py           command-line entry point
