@@ -229,12 +229,15 @@ git push origin v0.1.0
 ```
 
 Then open the repository's Releases page on GitHub, check the draft and
-publish it. Update the version in `backend/app/__init__.py` first.
+publish it. Before tagging, update the version in `backend/app/__init__.py`
+and move the "Unreleased" section of [CHANGELOG.md](CHANGELOG.md) under the
+new version number.
 
 ## Project layout
 
 ```
 bootstrap.py         one-command development setup
+CHANGELOG.md         what changed in each version
 backend/
   app/
     __main__.py      starts the server and opens the window (or the browser)
