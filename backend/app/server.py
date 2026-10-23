@@ -25,6 +25,7 @@ from app.fonts import FONTS, font_path
 from app.i18n import LANGUAGES, TranslatableError, translate
 from app.jobs import RENDER, TRANSCRIPTION, JobAlreadyRunning, JobManager, render_work, transcription_work
 from app.models import MODEL_SIZES, Project, Segment, Style
+from app.presets import PresetNotFound, PresetStore
 from app.render import BLANK, Overlay, probe, render_video
 from app.segmentation import split_segments
 from app.srt import segments_to_srt
@@ -76,6 +77,20 @@ class RenderRequest(BaseModel):
     overlays: list[Overlay]
 
 
+class PresetCreate(BaseModel):
+    name: str
+    style: Style
+
+
+class PresetUpdate(BaseModel):
+    name: str | None = None
+    style: Style | None = None
+
+
+class DefaultPreset(BaseModel):
+    id: str
+
+
 def project_summary(project: Project) -> dict:
     return {
         "id": project.id,
@@ -109,6 +124,7 @@ def create_app(
     transcribe_fn=transcribe,
     render_fn=render_video,
     probe_fn=probe,
+    presets: PresetStore | None = None,
 ) -> FastAPI:
     """`ui_language` is the interface language explicitly chosen at launch, if any.
 
@@ -116,6 +132,8 @@ def create_app(
     fakes in the tests.
     """
     jobs = JobManager()
+    # Kept next to the projects folder, in the application's data folder.
+    presets = presets or PresetStore(store.root.parent / "presets.json")
     app = FastAPI(title="Sous-titreur", docs_url="/api/docs", openapi_url="/api/openapi.json")
 
     # Only answer requests addressed to this machine by name. This blocks
@@ -204,7 +222,10 @@ def create_app(
         The file is streamed to disk chunk by chunk, so even a very large video
         never sits in memory.
         """
-        project = store.create(Path(filename).stem or "video", safe_suffix(filename))
+        # New projects start with the preset chosen as default.
+        project = store.create(
+            Path(filename).stem or "video", safe_suffix(filename), presets.default_style()
+        )
         path = store.video_path(project)
         try:
             with path.open("wb") as file:
@@ -264,6 +285,45 @@ def create_app(
         if body.max_chars < 1:
             raise HTTPException(422, "max_chars must be positive")
         return split_segments(body.segments, body.max_chars)
+
+    # --- Style presets
+
+    @app.get("/api/presets")
+    def list_presets() -> dict:
+        return presets.listing()
+
+    @app.post("/api/presets", status_code=201)
+    def create_preset(body: PresetCreate) -> dict:
+        check_style(body.style)
+        try:
+            return asdict(presets.create(body.name, body.style))
+        except ValueError:
+            raise HTTPException(422, "Invalid preset name") from None
+
+    @app.put("/api/presets/default", status_code=204)
+    def set_default_preset(body: DefaultPreset) -> None:
+        try:
+            presets.set_default(body.id)
+        except PresetNotFound:
+            raise HTTPException(404, "Preset not found") from None
+
+    @app.put("/api/presets/{preset_id}")
+    def update_preset(preset_id: str, body: PresetUpdate) -> dict:
+        if body.style is not None:
+            check_style(body.style)
+        try:
+            return asdict(presets.update(preset_id, body.name, body.style))
+        except PresetNotFound:
+            raise HTTPException(404, "Preset not found") from None
+        except ValueError:
+            raise HTTPException(422, "Invalid preset name") from None
+
+    @app.delete("/api/presets/{preset_id}", status_code=204)
+    def delete_preset(preset_id: str) -> None:
+        try:
+            presets.delete(preset_id)
+        except PresetNotFound:
+            raise HTTPException(404, "Preset not found") from None
 
     # --- Transcription
 

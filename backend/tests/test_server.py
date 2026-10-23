@@ -26,7 +26,8 @@ def fake_transcribe(audio, model, language, on_progress, on_status):
 
 @pytest.fixture
 def store(tmp_path: Path) -> ProjectStore:
-    return ProjectStore(tmp_path)
+    # presets.json goes next to the projects folder: keep both in tmp_path.
+    return ProjectStore(tmp_path / "projects")
 
 
 def fake_render(video, frames_dir, overlays, output, on_progress):
@@ -281,3 +282,46 @@ def test_favicon(client):
     assert response.status_code in (200, 404)
     if response.status_code == 200:
         assert response.headers["content-type"] == "image/png"
+
+
+def test_presets_api(client):
+    listing = client.get("/api/presets").json()
+    assert listing["default"] == "builtin:social"
+    assert [p["id"] for p in listing["builtin"]] == [
+        "builtin:classic", "builtin:social", "builtin:big_centered", "builtin:black_box"
+    ]
+    assert listing["custom"] == []
+
+    style = {**listing["builtin"][0]["style"], "text_color": "#ff0000"}
+    created = client.post("/api/presets", json={"name": "  Mon  style ", "style": style}, headers=HEADERS)
+    assert created.status_code == 201
+    preset = created.json()
+    assert preset["name"] == "Mon style"
+
+    renamed = client.put(f"/api/presets/{preset['id']}", json={"name": "Interviews"}, headers=HEADERS)
+    assert renamed.json()["name"] == "Interviews"
+    assert renamed.json()["style"]["text_color"] == "#ff0000"
+
+    assert client.post("/api/presets", json={"name": "", "style": style}, headers=HEADERS).status_code == 422
+    bad = {**style, "font": "Comic Sans"}
+    assert client.post("/api/presets", json={"name": "x", "style": bad}, headers=HEADERS).status_code == 422
+    assert client.put("/api/presets/builtin:classic", json={"name": "x"}, headers=HEADERS).status_code == 404
+
+
+def test_new_projects_start_with_the_default_preset(client):
+    style = {**client.get("/api/presets").json()["builtin"][0]["style"], "text_color": "#123456", "y": 0.42}
+    preset = client.post("/api/presets", json={"name": "Mine", "style": style}, headers=HEADERS).json()
+    assert client.put("/api/presets/default", json={"id": preset["id"]}, headers=HEADERS).status_code == 204
+
+    project = upload(client).json()
+    assert project["style"]["text_color"] == "#123456"
+    assert project["style"]["y"] == 0.42
+
+    # Deleting the default preset brings back the application's default.
+    assert client.delete(f"/api/presets/{preset['id']}", headers=HEADERS).status_code == 204
+    assert client.get("/api/presets").json()["default"] == "builtin:social"
+    assert upload(client).json()["style"]["text_color"] == "#ffff00"
+
+    assert client.put("/api/presets/default", json={"id": "nope"}, headers=HEADERS).status_code == 404
+    assert client.put("/api/presets/default", json={"id": "builtin:classic"}, headers=HEADERS).status_code == 204
+    assert upload(client).json()["style"]["font"] == "Roboto"
