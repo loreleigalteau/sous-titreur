@@ -23,6 +23,9 @@ jobs:
           - os: macos-15-intel  # Macs with an Intel processor
           - os: windows-latest
     runs-on: ${{ matrix.os }}
+    env:
+      # Python in UTF-8 everywhere, also on Windows (whose default is cp1252).
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v6
 

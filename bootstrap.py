@@ -41,6 +41,12 @@ ROOT = Path(__file__).resolve().parent
 BACKEND = ROOT / "backend"
 VENV = BACKEND / ".venv"
 
+# Windows terminals and build logs may use an old character set (cp1252) that
+# has no "→" or "✓": write in UTF-8, which has every character.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
+
 # app.models only uses the standard library.
 sys.path.insert(0, str(BACKEND))
 from app.models import MODEL_SIZES  # noqa: E402

@@ -39,6 +39,12 @@ MODEL = "small"  # the application's default model
 sys.path.insert(0, str(ROOT / "backend"))
 from app import __version__  # noqa: E402
 
+# Windows terminals and build logs may use an old character set (cp1252) that
+# has no "→" or "✓": write in UTF-8, which has every character.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
+
 
 def step(text: str) -> None:
     print(f"→ {text}", flush=True)

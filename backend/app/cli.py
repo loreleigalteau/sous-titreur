@@ -19,6 +19,17 @@ from app.srt import write_srt
 from app.transcribe import transcribe
 
 
+def make_console_safe() -> None:
+    """Never crash on a character the terminal cannot show.
+
+    Some Windows terminals use an old character set without "…" or "«": such
+    characters are replaced (by "?") instead of stopping the program.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
+
 def read_ui_language(argv: list[str] | None) -> str | None:
     """Read --ui-lang alone, before the full parser is built.
 
@@ -73,6 +84,7 @@ class ProgressPrinter:
 
 
 def main(argv: list[str] | None = None) -> int:
+    make_console_safe()
     set_language(read_ui_language(argv) or detect_language())
     args = parse_args(argv)
     output = args.output or args.video.with_suffix(".srt")

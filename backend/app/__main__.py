@@ -16,7 +16,7 @@ from pathlib import Path
 
 import uvicorn
 
-from app.cli import read_ui_language
+from app.cli import make_console_safe, read_ui_language
 from app.i18n import LANGUAGES, detect_language, language_from_env, set_language, t
 from app.server import create_app
 from app.storage import ProjectStore, default_data_dir
@@ -75,6 +75,7 @@ def run_in_browser(server: uvicorn.Server, url: str, open_browser: bool) -> None
 
 
 def main(argv: list[str] | None = None) -> int:
+    make_console_safe()
     # A language chosen explicitly also applies to the interface; otherwise the
     # interface follows the system's (or browser's) language.
     chosen_language = read_ui_language(argv) or language_from_env()
