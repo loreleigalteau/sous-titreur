@@ -7,7 +7,7 @@ and version numbers follow [Semantic Versioning](https://semver.org/).
 When releasing, rename "Unreleased" to the new version and its date, and use
 the same number in `backend/app/__init__.py` and in the Git tag (`v0.2.0`).
 
-## [Unreleased]
+## [0.3.0] - 2026-10-23
 - Word by word, in the style panel:
   - highlight the word being spoken, in another colour, and optionally bigger;
   - show only a few words at a time (1 to 6), for short videos.
